@@ -54,24 +54,6 @@ def get_film_by_id(film_id: int):
         cursor.close()
         conn.close()
 
-# Эндпоинт для пересчета популярности
-@app.post("/films/recalculate-popularity/")
-def recalculate_popularity():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    update_query = """
-        UPDATE films
-        SET popularity = ((rating_kp * 0.2 + rating_imdb * 0.15 + rating_critics * 0.15) * LOG10(votes_kp * 0.4 + votes_imdb * 0.3 + 1) + LOG10(boxoffice_dollar + 1))
-    """
-
-    try:
-        cursor.execute(update_query)
-        conn.commit()
-        return {"message": "Популярность фильмов успешно пересчитана."}
-    finally:
-        cursor.close()
-        conn.close()
 
 # Эндпоинт для фильтрации фильмов по множеству параметров
 @app.get("/films/advanced-filter/")
