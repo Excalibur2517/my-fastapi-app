@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException, Query
 import mysql.connector
 from typing import Optional
+from mysql.connector import Error
+
 
 # Данные для подключения к БД MySQL
 db_config = {
@@ -71,25 +73,6 @@ def recalculate_popularity():
         cursor.close()
         conn.close()
 
-# Эндпоинт для пересчета общего рейтинга
-@app.post("/films/recalculate-rating-all/")
-def recalculate_rating_all():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    update_query = """
-        UPDATE films
-        SET rating_all = (rating_kp + rating_imdb + rating_critics) / 3
-    """
-
-    try:
-        cursor.execute(update_query)
-        conn.commit()
-        return {"message": "Общий рейтинг фильмов успешно пересчитан."}
-    finally:
-        cursor.close()
-        conn.close()
-
 # Эндпоинт для фильтрации фильмов по множеству параметров
 @app.get("/films/advanced-filter/")
 def advanced_filter(
@@ -113,33 +96,36 @@ def advanced_filter(
     age_to: Optional[int] = Query(None, ge=0, le=18, description="Возрастное ограничение до"),
     sort_by: Optional[str] = Query("popularity", description="Сортировка по: popularity, rating_all или year_prem")
 ):
-    filters = ["1=1"]
+    filters = []
     params = []
 
-    # Установка фильтров
-    if year_from and year_to:
-        filters.append("year_prem BETWEEN %s AND %s")
-        params.extend([year_from, year_to])
+    # Установка фильтров по диапазонам
+    def add_filter(field, from_value, to_value):
+        if from_value is not None:
+            filters.append(f"{field} >= %s")
+            params.append(from_value)
+        if to_value is not None:
+            filters.append(f"{field} <= %s")
+            params.append(to_value)
 
-    if kp_from and kp_to:
-        filters.append("rating_kp BETWEEN %s AND %s")
-        params.extend([kp_from, kp_to])
+    # Добавление фильтров
+    add_filter("year_prem", year_from, year_to)
+    add_filter("rating_kp", kp_from, kp_to)
+    add_filter("rating_imdb", imdb_from, imdb_to)
+    add_filter("rating_critics", critics_from, critics_to)
+    add_filter("boxoffice_dollar", boxoffice_from, boxoffice_to)
+    add_filter("budget_dollar", budget_from, budget_to)
+    add_filter("timing_m", duration_from, duration_to)
+    add_filter("age", age_from, age_to)
 
-    if imdb_from and imdb_to:
-        filters.append("rating_imdb BETWEEN %s AND %s")
-        params.extend([imdb_from, imdb_to])
-
-    if critics_from and critics_to:
-        filters.append("rating_critics BETWEEN %s AND %s")
-        params.extend([critics_from, critics_to])
-
-    # Жанры и страны
+    # Фильтрация по жанрам
     if genres:
         genre_list = genres.split(",")
         genre_placeholders = ", ".join(["%s"] * len(genre_list))
         filters.append(f"films.id IN (SELECT DISTINCT id_film FROM films_genre_link WHERE id_genre IN (SELECT id FROM films_genre WHERE genre IN ({genre_placeholders})))")
         params.extend(genre_list)
 
+    # Фильтрация по странам
     if countries:
         country_list = countries.split(",")
         country_placeholders = ", ".join(["%s"] * len(country_list))
@@ -151,18 +137,18 @@ def advanced_filter(
     if sort_by not in valid_sort_columns:
         raise HTTPException(status_code=400, detail="Некорректное значение sort_by")
 
+    # Финальный SQL-запрос
     query = f"""
-        SELECT films.*
+        SELECT DISTINCT films.*
         FROM films
         WHERE {" AND ".join(filters)}
-        GROUP BY films.id
         ORDER BY {sort_by} DESC
         LIMIT 100
     """
 
+    # Выполнение запроса
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-
     try:
         cursor.execute(query, params)
         rows = cursor.fetchall()
