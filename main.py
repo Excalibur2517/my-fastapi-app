@@ -23,36 +23,6 @@ def get_db_connection():
 def root():
     return {"message": "Hello! This is Films API."}
 
-# 1) ЭНДПОИНТ: получить информацию о фильме по ID
-@app.get("/films/{film_id}")
-def get_film_by_id(film_id: int):
-    """
-    Возвращает всю информацию о фильме (id, rating_kp, rating_imdb, genre, country, name, description)
-    по указанному film_id.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        sql = """
-        SELECT 
-            id, 
-            rating_kp, 
-            rating_imdb, 
-            genre, 
-            country, 
-            name,
-            description
-        FROM films
-        WHERE id = %s
-        """
-        cursor.execute(sql, (film_id,))
-        row = cursor.fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="Film not found")
-        return row
-    finally:
-        cursor.close()
-        conn.close()
 
 
 # Эндпоинт для фильтрации фильмов по множеству параметров
@@ -139,37 +109,119 @@ def advanced_filter(
         cursor.close()
         conn.close()
 
-# Тестовый эндпоинт фильтрации по году выпуска
-@app.get("/films/advanced-filter2/")
+# 1) ЭНДПОИНТ: получить информацию о фильме по ID
+
+@app.get("/films/{film_id}")
+def get_film_by_id(film_id: int):
+    """
+    Возвращает всю информацию о фильме (id, rating_kp, rating_imdb, genre, country, name, description)
+    по указанному film_id.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        sql = """
+        SELECT 
+            id, 
+            rating_kp, 
+            rating_imdb, 
+            genre, 
+            country, 
+            name,
+            description
+        FROM films
+        WHERE id = %s
+        """
+        cursor.execute(sql, (film_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Film not found")
+        return row
+    finally:
+        cursor.close()
+        conn.close()
+
+# Эндпоинт для фильтрации игр по множеству параметров
+@app.get("/games/advanced-filter/")
 def advanced_filter(
-    year_from: Optional[int] = Query(None, ge=1874, le=2025, description="Год выпуска от"),
-    year_to: Optional[int] = Query(None, ge=1874, le=2025, description="Год выпуска до"),
-    sort_by: Optional[str] = Query("popularity", description="Сортировка по: popularity, rating_all или year_prem")
+    genre: Optional[str] = Query(None, description="Жанры игры (через запятую)"),
+    platform: Optional[str] = Query(None, description="Платформы игры (через запятую)"),
+    releaseDate_from: Optional[int] = Query(None, ge=1954, le=2025, description="Год выпуска от"),
+    releaseDate_to: Optional[int] = Query(None, ge=1954, le=2025, description="Год выпуска до"),
+    playtime_from: Optional[int] = Query(None, ge=0, le=2630, description="Время прохождения от (в часах)"),
+    playtime_to: Optional[int] = Query(None, ge=0, le=2630, description="Время прохождения до (в часах)"),
+    metacritic_from: Optional[int] = Query(None, ge=0, le=100, description="Metacritic рейтинг от"),
+    metacritic_to: Optional[int] = Query(None, ge=0, le=100, description="Metacritic рейтинг до"),
+    rawg_from: Optional[float] = Query(None, ge=0, le=5, description="Rawg рейтинг от"),
+    rawg_to: Optional[float] = Query(None, ge=0, le=5, description="Rawg рейтинг до"),
+    percent_from: Optional[int] = Query(None, ge=0, le=100, description="Процент рекомандации от"),
+    percent_to: Optional[int] = Query(None, ge=0, le=100, description="Процент рекомандации до"),
+    sort_by: Optional[str] = Query("released", description="Сортировка по: released, rating_all или popularity")
 ):
-    filters = ["1=1"]
+    filters = []
     params = []
 
-    # Проверка и установка значений для года
-    if year_from is not None and year_to is not None:
-        filters.append("year_prem BETWEEN %s AND %s")
-        params.extend([year_from, year_to])
+    # Функция для установки фильтров по диапазонам
+    def add_filter(field, from_value, to_value, max_value):
+        if from_value is not None:
+            filters.append(f"{field} >= %s")
+            params.append(from_value)
+        if to_value is not None:
+            filters.append(f"{field} <= %s")
+            params.append(to_value if to_value is not None else max_value)
 
-    # Определение сортировки
-    valid_sort_columns = ["popularity", "rating_all", "year_prem"]
+    # Добавление фильтров по диапазонам
+    add_filter("released", releaseDate_from, releaseDate_to, 2025)
+    add_filter("playtime", playtime_from, playtime_to, 2630)
+    add_filter("metacritic", metacritic_from, metacritic_to, 100)
+    add_filter("rating", rawg_from, rawg_to, 5)
+    add_filter("percent_recomended", percent_from, percent_to, 100)
+
+    # Фильтрация по жанрам
+    if genre:
+        genre_list = genre.split(",")
+        genre_placeholders = ", ".join(["%s"] * len(genre_list))
+        filters.append(f"""
+            games.id IN (
+                SELECT DISTINCT id_game FROM games_genres_link
+                WHERE id_genre IN (
+                    SELECT id FROM games_genres WHERE genre IN ({genre_placeholders})
+                )
+            )
+        """)
+        params.extend(genre_list)
+
+    # Фильтрация по платформам
+    if platform:
+        platform_list = platform.split(",")
+        platform_placeholders = ", ".join(["%s"] * len(platform_list))
+        filters.append(f"""
+            games.id IN (
+                SELECT DISTINCT id_game FROM games_platforms_link
+                WHERE id_platform IN (
+                    SELECT id FROM games_platforms WHERE platform IN ({platform_placeholders})
+                )
+            )
+        """)
+        params.extend(platform_list)
+
+    # Проверка сортировки
+    valid_sort_columns = ["released", "rating_all", "popularity"]
     if sort_by not in valid_sort_columns:
         raise HTTPException(status_code=400, detail="Некорректное значение sort_by")
 
+    # Финальный SQL-запрос
     query = f"""
-        SELECT films.*
-        FROM films
+        SELECT DISTINCT games.*
+        FROM games
         WHERE {" AND ".join(filters)}
         ORDER BY {sort_by} DESC
         LIMIT 100
     """
 
+    # Выполнение запроса
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-
     try:
         cursor.execute(query, params)
         rows = cursor.fetchall()
@@ -177,5 +229,3 @@ def advanced_filter(
     finally:
         cursor.close()
         conn.close()
-
-
