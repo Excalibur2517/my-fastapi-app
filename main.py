@@ -35,7 +35,7 @@ def get_main_screen_films():
     try:
         # SQL-запрос для получения ID фильмов с главного экрана
         cursor.execute("""
-            SELECT f.id, f.name, f.poster
+            SELECT f.id, f.name, f.poster_cloud
             FROM films_main_screen ms
             JOIN films f ON ms.id = f.id
         """)
