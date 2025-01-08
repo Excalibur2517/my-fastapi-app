@@ -176,7 +176,7 @@ def get_films_collections():
     cursor = conn.cursor(dictionary=True)
     try:
         # SQL-запрос для получения данных из таблицы
-        cursor.execute("SELECT name, poster FROM films_collection_blocks")
+        cursor.execute("SELECT id,name, poster FROM films_collection_blocks")
         rows = cursor.fetchall()
         
         # Проверка на пустой результат
