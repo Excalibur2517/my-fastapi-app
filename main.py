@@ -190,3 +190,33 @@ def get_films_collections():
         cursor.close()
         conn.close()
 
+
+# Новый эндпоинт для получения фильмов по ID блока
+@app.get("/films/collections/{block_id}", response_model=List[dict])
+def get_films_by_block_id(block_id: int):
+    """
+    Возвращает все данные из таблицы films_collections, соответствующие переданному block_id.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # SQL-запрос для получения данных по block_id
+        cursor.execute("""
+            SELECT id, block_id, name, poster 
+            FROM films_collections 
+            WHERE block_id = %s
+        """, (block_id,))
+        
+        rows = cursor.fetchall()
+        
+        # Проверка на пустой результат
+        if not rows:
+            raise HTTPException(status_code=404, detail=f"No films found for block_id {block_id}")
+        
+        return rows
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
