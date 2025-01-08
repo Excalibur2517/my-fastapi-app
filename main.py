@@ -220,3 +220,33 @@ def get_films_by_block_id(block_id: int):
         cursor.close()
         conn.close()
 
+
+# Новый эндпоинт для получения 10 фильмов с наименьшим количеством символов в name
+@app.get("/films/collections-shortest-names/", response_model=List[dict])
+def get_shortest_names():
+    """
+    Возвращает 10 фильмов с наименьшим количеством символов в поле name.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # SQL-запрос для получения 10 строк с наименьшим количеством символов в поле name
+        cursor.execute("""
+            SELECT id, name, poster 
+            FROM films_collections 
+            ORDER BY LENGTH(name) ASC
+            LIMIT 10
+        """)
+        
+        rows = cursor.fetchall()
+        
+        # Проверка на пустой результат
+        if not rows:
+            raise HTTPException(status_code=404, detail="No films found")
+        
+        return rows
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
