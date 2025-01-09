@@ -291,3 +291,33 @@ def get_films_by_collection(collection_id: int):
     finally:
         cursor.close()
         conn.close()
+
+# Эндпоинт для поиска фильмов по названию
+@app.get("/films/search_film_by_name/{search_text}", response_model=List[dict])
+def search_film_by_name(search_text: str):
+    """
+    Ищет фильмы по названию и возвращает 20 первых результатов, отсортированных по popularity.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # SQL-запрос для поиска фильмов по названию
+        query = """
+            SELECT id, name, poster_cloud, popularity
+            FROM films
+            WHERE m_or_ser = 'movie' AND name LIKE %s
+            ORDER BY popularity DESC
+            LIMIT 20
+        """
+        cursor.execute(query, (f"%{search_text}%",))
+        films = cursor.fetchall()
+
+        if not films:
+            raise HTTPException(status_code=404, detail="Фильмы не найдены")
+        
+        return films
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
