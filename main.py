@@ -51,7 +51,6 @@ def get_main_screen_films():
         cursor.close()
         conn.close()
 
-# Эндпоинт для фильтрации фильмов по множеству параметров
 @app.get("/films/advanced-filter/")
 def advanced_filter(
     genres: Optional[str] = Query(None, description="Жанры фильма (через запятую)"),
@@ -74,8 +73,12 @@ def advanced_filter(
     age_to: Optional[int] = Query(None, ge=0, le=18, description="Возрастное ограничение до"),
     sort_by: Optional[str] = Query("popularity", description="Сортировка по: popularity, rating_all или year_prem")
 ):
-    filters = []
+    filters = ["m_or_ser = 'movie'"]  # Только фильмы
     params = []
+
+    # Исключение короткометражек по умолчанию
+    if not genres or "Короткометражка" not in genres:
+        filters.append("films.id NOT IN (SELECT id_film FROM films_genre_link WHERE id_genre IN (SELECT id FROM films_genre WHERE genre = 'Короткометражка'))")
 
     # Установка фильтров по диапазонам
     def add_filter(field, from_value, to_value):
@@ -134,6 +137,7 @@ def advanced_filter(
     finally:
         cursor.close()
         conn.close()
+
 
 # Эндпоинт: получить информацию о фильме по ID
 @app.get("/films/search_film_by_id/{film_id}")
