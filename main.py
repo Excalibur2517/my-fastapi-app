@@ -24,7 +24,7 @@ def root():
     return {"message": "Hello! This is Films API."}
 
 # 🚀 Новый эндпоинт для получения фильмов с главного экрана
-@app.get("/films/main-screen", response_model=List[dict])
+@app.get("/films/main_screen_movies", response_model=List[dict])
 def get_main_screen_films():
     """
     Получает список фильмов с главного экрана по ID из таблицы films_main_screen
@@ -136,7 +136,7 @@ def advanced_filter(
         conn.close()
 
 # Эндпоинт: получить информацию о фильме по ID
-@app.get("/films/{film_id}")
+@app.get("/films/search_film_by_id/{film_id}")
 def get_film_by_id(film_id: int):
     """
     Возвращает всю информацию о фильме (id, rating_kp, rating_imdb, genre, country, name, description)
@@ -167,7 +167,7 @@ def get_film_by_id(film_id: int):
         conn.close()
 
 # Новый эндпоинт для получения всех блоков подборок
-@app.get("/films/collections/", response_model=List[dict])
+@app.get("/films/blocks_of_collection/", response_model=List[dict])
 def get_films_collections():
     """
     Возвращает все строки из таблицы films_collection_blocks с полями name и poster.
@@ -192,7 +192,7 @@ def get_films_collections():
 
 
 # Новый эндпоинт для получения фильмов по ID блока
-@app.get("/films/collections/{block_id}", response_model=List[dict])
+@app.get("/films/single_block_by_id/{block_id}", response_model=List[dict])
 def get_films_by_block_id(block_id: int):
     """
     Возвращает все данные из таблицы films_collections, соответствующие переданному block_id.
@@ -222,7 +222,7 @@ def get_films_by_block_id(block_id: int):
 
 
 # Новый эндпоинт для получения 10 фильмов с наименьшим количеством символов в name
-@app.get("/films/collections-shortest-names/", response_model=List[dict])
+@app.get("/films/10_shortest_collections_list/", response_model=List[dict])
 def get_shortest_names():
     """
     Возвращает 10 фильмов с наименьшим количеством символов в поле name.
@@ -262,7 +262,7 @@ def get_films_by_collection(collection_id: int):
     try:
         # Исправленный SQL-запрос для получения фильмов по ID подборки
         cursor.execute("""
-            SELECT f.*
+            SELECT f.id,f.name,f.country,f.rating_kp,f.rating_imdb,f.rating_critics,f.genre,f.poster_cloud
             FROM films f
             JOIN films_collection_link cl ON f.id = cl.films_id
             WHERE cl.collection_id = %s
