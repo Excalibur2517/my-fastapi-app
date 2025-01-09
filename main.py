@@ -152,12 +152,20 @@ def get_film_by_id(film_id: int):
         sql = """
         SELECT 
             id, 
+            boxoffice_dollar,
             rating_kp, 
-            rating_imdb, 
+            rating_imdb,
+            rating_critics,
+            year_prem,
+            poster_cloud, 
             genre, 
             country, 
             name,
-            description
+            description,
+            directors,
+            actors,
+            budget_dollar,
+            age
         FROM films
         WHERE id = %s
         """
