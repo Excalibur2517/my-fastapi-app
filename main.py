@@ -262,7 +262,7 @@ def get_films_by_collection(collection_id: int):
     try:
         # Исправленный SQL-запрос для получения фильмов по ID подборки
         cursor.execute("""
-            SELECT f.id,f.name,f.country,f.rating_kp,f.rating_imdb,f.rating_critics,f.genre,f.poster_cloud
+            SELECT f.id,f.name,f.country,f.rating_kp,f.rating_imdb,f.rating_critics,f.genre,f.poster_cloud,f.year_prem
             FROM films f
             JOIN films_collection_link cl ON f.id = cl.films_id
             WHERE cl.collection_id = %s
