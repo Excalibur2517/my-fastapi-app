@@ -303,7 +303,7 @@ def search_film_by_name(search_text: str):
     try:
         # SQL-запрос для поиска фильмов по названию
         query = """
-            SELECT id, name, poster_cloud, popularity
+            SELECT id, name, poster_cloud, popularity,rating_kp,rating_imdb,rating_critics,genre,country,year_prem
             FROM films
             WHERE m_or_ser = 'movie' AND name LIKE %s
             ORDER BY popularity DESC
