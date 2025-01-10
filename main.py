@@ -321,3 +321,73 @@ def search_film_by_name(search_text: str):
     finally:
         cursor.close()
         conn.close()
+
+
+# Новый эндпоинт для получения фильмов по жанру
+@app.get("/films/by_genre/")
+def get_films_by_genre(
+    genre: str,
+    offset: int = 0,
+    limit: int = 20,
+    sort_by: str = "popularity"
+):
+    """
+    Возвращает фильмы по выбранному жанру с возможностью пагинации и сортировки.
+    Если выбран жанр 'Короткометражка', то он будет включен в результаты.
+    
+    Параметры:
+    - genre: Жанр фильма.
+    - offset: С какого элемента начинать выборку.
+    - limit: Количество фильмов в выборке.
+    - sort_by: Поле для сортировки. Возможные значения: 'popularity', 'rating_all', 'year_prem'.
+    """
+    # Проверка на допустимые значения sort_by
+    valid_sort_columns = ["popularity", "rating_all", "year_prem"]
+    if sort_by not in valid_sort_columns:
+        raise HTTPException(status_code=400, detail=f"Некорректное значение sort_by. Возможные значения: {valid_sort_columns}")
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Определяем фильтр для жанра
+        if genre.lower() != "короткометражка":
+            query = f"""
+                SELECT DISTINCT f.id, f.name, f.poster_cloud, f.popularity, f.rating_kp, f.rating_imdb, 
+                                f.rating_critics, f.genre, f.country, f.year_prem
+                FROM films f
+                JOIN films_genre_link fgl ON f.id = fgl.id_film
+                JOIN films_genre fg ON fgl.id_genre = fg.id
+                WHERE fg.genre = %s
+                AND f.id NOT IN (
+                    SELECT id_film
+                    FROM films_genre_link
+                    WHERE id_genre = (SELECT id FROM films_genre WHERE genre = 'Короткометражка')
+                )
+                ORDER BY f.{sort_by} DESC
+                LIMIT %s OFFSET %s
+            """
+            cursor.execute(query, (genre, limit, offset))
+        else:
+            query = f"""
+                SELECT DISTINCT f.id, f.name, f.poster_cloud, f.popularity, f.rating_kp, f.rating_imdb, 
+                                f.rating_critics, f.genre, f.country, f.year_prem
+                FROM films f
+                JOIN films_genre_link fgl ON f.id = fgl.id_film
+                JOIN films_genre fg ON fgl.id_genre = fg.id
+                WHERE fg.genre = %s
+                ORDER BY f.{sort_by} DESC
+                LIMIT %s OFFSET %s
+            """
+            cursor.execute(query, (genre, limit, offset))
+
+        rows = cursor.fetchall()
+
+        if not rows:
+            raise HTTPException(status_code=404, detail="Фильмы не найдены для указанного жанра")
+
+        return rows
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
