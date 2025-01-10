@@ -351,7 +351,7 @@ def get_films_by_genre(
             JOIN films_genre_link fgl ON f.id = fgl.id_film
             JOIN films_genre fg ON fgl.id_genre = fg.id
             WHERE fg.genre = %s
-            AND f.m_or_ser = 'movie'
+            AND f.m_or_ser = 'movie' AND year_prem < 2025
         """
 
         # Исключение короткометражек, если жанр не "Короткометражка"
