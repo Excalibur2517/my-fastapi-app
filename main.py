@@ -45,8 +45,9 @@ def get_random_top_200_films():
             SELECT id, name, poster_cloud
             FROM films
             WHERE m_or_ser = 'movie'
+            AND CHAR_LENGTH(name) <= 25
             ORDER BY popularity DESC
-            LIMIT 200
+            LIMIT 300
         """)
         films = cursor.fetchall()
 
