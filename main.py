@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException, Query
 import mysql.connector
 from typing import Optional, List
 from mysql.connector import Error
+import random
+
 
 # Данные для подключения к БД MySQL
 db_config = {
@@ -23,6 +25,45 @@ def get_db_connection():
 def root():
     return {"message": "Hello! This is Films API."}
 
+
+#
+# Главная страница
+# Эндпоинт для получения 20 случайных фильмов из топ-200 по популярности
+# Эндпоинт для получения 20 случайных фильмов из топ-200 по популярности
+@app.get("/films/random_top200/")
+def get_random_top_200_films():
+    """
+    Возвращает 20 случайных фильмов из топ-200 по популярности.
+    Поля: id, name, poster_cloud.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # Выбираем топ-200 фильмов по популярности
+        cursor.execute("""
+            SELECT id, name, poster_cloud
+            FROM films
+            WHERE m_or_ser = 'movie'
+            ORDER BY popularity DESC
+            LIMIT 200
+        """)
+        films = cursor.fetchall()
+
+        if not films:
+            raise HTTPException(status_code=404, detail="Фильмы не найдены")
+
+        # Берем 20 случайных фильмов из списка топ-200
+        random_films = random.sample(films, 20)
+
+        return random_films
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=f"Ошибка выполнения SQL-запроса: {err}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Неизвестная ошибка: {e}")
+    finally:
+        cursor.close()
+        conn.close()
 # 🚀 Новый эндпоинт для получения фильмов с главного экрана
 @app.get("/films/main_screen_movies", response_model=List[dict])
 def get_main_screen_films():
