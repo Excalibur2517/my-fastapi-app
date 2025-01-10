@@ -333,13 +333,7 @@ def get_films_by_genre(
 ):
     """
     Возвращает фильмы по выбранному жанру с возможностью пагинации и сортировки.
-    Если выбран жанр 'Короткометражка', то он будет включен в результаты.
-    
-    Параметры:
-    - genre: Жанр фильма.
-    - offset: С какого элемента начинать выборку.
-    - limit: Количество фильмов в выборке.
-    - sort_by: Поле для сортировки. Возможные значения: 'popularity', 'rating_all', 'year_prem'.
+    Исключает фильмы жанра 'Короткометражка', если они не выбраны явно.
     """
     # Проверка на допустимые значения sort_by
     valid_sort_columns = ["popularity", "rating_all", "year_prem"]
@@ -350,36 +344,30 @@ def get_films_by_genre(
     cursor = conn.cursor(dictionary=True)
     try:
         # Определяем фильтр для жанра
+        query = f"""
+            SELECT DISTINCT f.id, f.name, f.poster_cloud, f.popularity, f.rating_kp, f.rating_imdb, 
+                            f.rating_critics, f.genre, f.country, f.year_prem, f.rating_all
+            FROM films f
+            JOIN films_genre_link fgl ON f.id = fgl.id_film
+            JOIN films_genre fg ON fgl.id_genre = fg.id
+            WHERE fg.genre = %s
+        """
+
+        # Исключение короткометражек, если жанр не "Короткометражка"
         if genre.lower() != "короткометражка":
-            query = f"""
-                SELECT DISTINCT f.id, f.name, f.poster_cloud, f.popularity, f.rating_kp, f.rating_imdb, 
-                                f.rating_critics, f.genre, f.country, f.year_prem
-                FROM films f
-                JOIN films_genre_link fgl ON f.id = fgl.id_film
-                JOIN films_genre fg ON fgl.id_genre = fg.id
-                WHERE fg.genre = %s
+            query += """
                 AND f.id NOT IN (
                     SELECT id_film
                     FROM films_genre_link
                     WHERE id_genre = (SELECT id FROM films_genre WHERE genre = 'Короткометражка')
                 )
-                ORDER BY f.{sort_by} DESC
-                LIMIT %s OFFSET %s
             """
-            cursor.execute(query, (genre, limit, offset))
-        else:
-            query = f"""
-                SELECT DISTINCT f.id, f.name, f.poster_cloud, f.popularity, f.rating_kp, f.rating_imdb, 
-                                f.rating_critics, f.genre, f.country, f.year_prem
-                FROM films f
-                JOIN films_genre_link fgl ON f.id = fgl.id_film
-                JOIN films_genre fg ON fgl.id_genre = fg.id
-                WHERE fg.genre = %s
-                ORDER BY f.{sort_by} DESC
-                LIMIT %s OFFSET %s
-            """
-            cursor.execute(query, (genre, limit, offset))
 
+        # Добавляем сортировку, лимит и офсет
+        query += f" ORDER BY f.{sort_by} DESC LIMIT %s OFFSET %s"
+
+        # Выполняем запрос
+        cursor.execute(query, (genre, limit, offset))
         rows = cursor.fetchall()
 
         if not rows:
