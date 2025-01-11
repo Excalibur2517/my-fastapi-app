@@ -533,3 +533,117 @@ def get_film_by_id(serial_id: int):
     finally:
         cursor.close()
         conn.close()
+
+#----------------------------------------Мультфильмы---------------------------------
+# Эндпоинт для получения 20 случайных фильмов из топ-200 по популярности
+@app.get("/cartoon/random_top200/")
+def get_random_top_200_cartoon():
+    """
+    Возвращает 20 случайных фильмов из топ-200 по популярности.
+    Поля: id, name, poster_cloud.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # Выбираем топ-200 фильмов по популярности
+        cursor.execute("""
+            SELECT id, name, poster_cloud
+            FROM films
+            WHERE m_or_ser = 'cartoon'
+            AND CHAR_LENGTH(name) <= 25
+            ORDER BY popularity DESC
+            LIMIT 100
+        """)
+        films = cursor.fetchall()
+
+        if not films:
+            raise HTTPException(status_code=404, detail="Мультфильмы не найдены")
+
+        # Берем 20 случайных фильмов из списка топ-200
+        random_films = random.sample(films, 20)
+
+        return random_films
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=f"Ошибка выполнения SQL-запроса: {err}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Неизвестная ошибка: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+
+#----------------------------------------Анимационные Сериалы---------------------------------
+# Эндпоинт для получения 20 случайных фильмов из топ-200 по популярности
+@app.get("/serials_animated/random_top200/")
+def get_random_top_200_serials_animated():
+    """
+    Возвращает 20 случайных фильмов из топ-200 по популярности.
+    Поля: id, name, poster_cloud.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # Выбираем топ-200 фильмов по популярности
+        cursor.execute("""
+            SELECT id, name, poster_cloud
+            FROM films
+            WHERE m_or_ser = 'animated-series'
+            AND CHAR_LENGTH(name) <= 25
+            ORDER BY popularity DESC
+            LIMIT 100
+        """)
+        films = cursor.fetchall()
+
+        if not films:
+            raise HTTPException(status_code=404, detail="Анимационные сериалы не найдены")
+
+        # Берем 20 случайных фильмов из списка топ-200
+        random_films = random.sample(films, 20)
+
+        return random_films
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=f"Ошибка выполнения SQL-запроса: {err}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Неизвестная ошибка: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+
+#----------------------------------------Анимэ---------------------------------
+# Эндпоинт для получения 20 случайных фильмов из топ-200 по популярности
+@app.get("/anime/random_top200/")
+def get_random_top_200_anime():
+    """
+    Возвращает 20 случайных фильмов из топ-200 по популярности.
+    Поля: id, name, poster_cloud.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # Выбираем топ-200 фильмов по популярности
+        cursor.execute("""
+            SELECT id, name, poster_cloud
+            FROM films
+            WHERE m_or_ser = 'anime'
+            AND CHAR_LENGTH(name) <= 25
+            ORDER BY popularity DESC
+            LIMIT 100
+        """)
+        films = cursor.fetchall()
+
+        if not films:
+            raise HTTPException(status_code=404, detail="Сериалы не найдены")
+
+        # Берем 20 случайных фильмов из списка топ-200
+        random_films = random.sample(films, 20)
+
+        return random_films
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=f"Ошибка выполнения SQL-запроса: {err}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Неизвестная ошибка: {e}")
+    finally:
+        cursor.close()
+        conn.close()
