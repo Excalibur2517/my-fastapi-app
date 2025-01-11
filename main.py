@@ -194,7 +194,8 @@ def get_film_by_id(film_id: int):
         SELECT 
             id, 
             poster_cloud, 
-            name
+            name,
+            m_or_ser
         FROM films
         WHERE id_kp = %s
         """
