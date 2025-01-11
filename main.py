@@ -180,6 +180,32 @@ def advanced_filter(
         cursor.close()
         conn.close()
 
+# Эндпоинт: получить информацию о фильме по ID_KP
+@app.get("/films/search_film_by_id/{film_id}")
+def get_film_by_id(film_id: int):
+    """
+    Возвращает всю информацию о фильме (id, rating_kp, rating_imdb, genre, country, name, description)
+    по указанному film_id.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        sql = """
+        SELECT 
+            id, 
+            poster_cloud, 
+            name
+        FROM films
+        WHERE id_kp = %s
+        """
+        cursor.execute(sql, (film_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Film not found")
+        return row
+    finally:
+        cursor.close()
+        conn.close()
 
 # Эндпоинт: получить информацию о фильме по ID
 @app.get("/films/search_film_by_id/{film_id}")
