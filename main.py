@@ -471,7 +471,7 @@ def get_random_top_200_serials():
             FROM films
             WHERE m_or_ser = 'tv-series'
             AND CHAR_LENGTH(name) <= 25
-            ORDER BY popularity DESC
+            ORDER BY rating_all DESC
             LIMIT 100
         """)
         films = cursor.fetchall()
@@ -552,7 +552,7 @@ def get_random_top_200_cartoon():
             FROM films
             WHERE m_or_ser = 'cartoon'
             AND CHAR_LENGTH(name) <= 25
-            ORDER BY popularity DESC
+            ORDER BY rating_all DESC
             LIMIT 100
         """)
         films = cursor.fetchall()
@@ -590,7 +590,7 @@ def get_random_top_200_serials_animated():
             FROM films
             WHERE m_or_ser = 'animated-series'
             AND CHAR_LENGTH(name) <= 25
-            ORDER BY popularity DESC
+            ORDER BY rating_all DESC
             LIMIT 100
         """)
         films = cursor.fetchall()
@@ -628,7 +628,7 @@ def get_random_top_200_anime():
             FROM films
             WHERE m_or_ser = 'anime'
             AND CHAR_LENGTH(name) <= 25
-            ORDER BY popularity DESC
+            ORDER BY rating_all DESC
             LIMIT 100
         """)
         films = cursor.fetchall()
