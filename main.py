@@ -346,7 +346,7 @@ def get_films_by_collection(collection_id: int):
     try:
         # Исправленный SQL-запрос для получения фильмов по ID подборки
         cursor.execute("""
-            SELECT f.id,f.name,f.country,f.rating_kp,f.rating_imdb,f.rating_critics,f.genre,f.poster_cloud,f.year_prem
+            SELECT f.id,f.name,f.country,f.rating_kp,f.rating_imdb,f.rating_critics,f.genre,f.poster_cloud,f.year_prem,f.popularity
             FROM films f
             JOIN films_collection_link cl ON f.id = cl.films_id
             WHERE cl.collection_id = %s
@@ -449,6 +449,44 @@ def get_films_by_genre(
         return rows
     except Error as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+#----------------------------------------СЕРИАЛЫ---------------------------------
+# Эндпоинт для получения 20 случайных фильмов из топ-200 по популярности
+@app.get("/serials/random_top200/")
+def get_random_top_200_serials():
+    """
+    Возвращает 20 случайных фильмов из топ-200 по популярности.
+    Поля: id, name, poster_cloud.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # Выбираем топ-200 фильмов по популярности
+        cursor.execute("""
+            SELECT id, name, poster_cloud
+            FROM films
+            WHERE m_or_ser = 'tv-series'
+            AND CHAR_LENGTH(name) <= 25
+            ORDER BY popularity DESC
+            LIMIT 100
+        """)
+        films = cursor.fetchall()
+
+        if not films:
+            raise HTTPException(status_code=404, detail="Сериалы не найдены")
+
+        # Берем 20 случайных фильмов из списка топ-200
+        random_films = random.sample(films, 20)
+
+        return random_films
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=f"Ошибка выполнения SQL-запроса: {err}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Неизвестная ошибка: {e}")
     finally:
         cursor.close()
         conn.close()
