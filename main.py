@@ -181,7 +181,7 @@ def advanced_filter(
         conn.close()
 
 # Эндпоинт: получить информацию о фильме по ID_KP
-@app.get("/films/search_film_by_id/{film_id}")
+@app.get("/films/search_film_by_id_kp/{film_id}")
 def get_film_by_id(film_id: int):
     """
     Возвращает всю информацию о фильме (id, rating_kp, rating_imdb, genre, country, name, description)
