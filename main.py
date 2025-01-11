@@ -490,3 +490,46 @@ def get_random_top_200_serials():
     finally:
         cursor.close()
         conn.close()
+
+
+# Эндпоинт: получить информацию о Сериале по ID
+@app.get("/serials/search_serial_by_id/{serial_id}")
+def get_film_by_id(serial_id: int):
+    """
+    Возвращает всю информацию о фильме (id, rating_kp, rating_imdb, genre, country, name, description)
+    по указанному film_id.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        sql = """
+        SELECT 
+            id, 
+            boxoffice_dollar,
+            rating_kp, 
+            rating_imdb,
+            rating_critics,
+            year_prem,
+            poster_cloud, 
+            genre, 
+            country, 
+            name,
+            description,
+            directors,
+            actors,
+            budget_dollar,
+            age,
+            timing_m,
+            popularity,
+            similar_m
+        FROM films
+        WHERE id = %s
+        """
+        cursor.execute(sql, (serial_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Film not found")
+        return row
+    finally:
+        cursor.close()
+        conn.close()
