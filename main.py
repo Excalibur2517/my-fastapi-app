@@ -210,7 +210,7 @@ def get_film_by_id(film_id: int):
             age,
             timing_m,
             popularity,
-            rating_all
+            similar_m
         FROM films
         WHERE id = %s
         """
