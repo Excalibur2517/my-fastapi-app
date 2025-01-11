@@ -519,7 +519,7 @@ def get_film_by_id(serial_id: int):
             actors,
             budget_dollar,
             age,
-            timing_m,
+            timing_s,
             popularity,
             similar_m
         FROM films
