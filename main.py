@@ -207,7 +207,10 @@ def get_film_by_id(film_id: int):
             directors,
             actors,
             budget_dollar,
-            age
+            age,
+            timing_m,
+            popularity,
+            rating_all
         FROM films
         WHERE id = %s
         """
