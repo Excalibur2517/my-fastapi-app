@@ -505,11 +505,12 @@ def get_film_by_id(serial_id: int):
         sql = """
         SELECT 
             id, 
-            boxoffice_dollar,
             rating_kp, 
             rating_imdb,
             rating_critics,
             year_prem,
+            seasons,
+            seasons_ep,
             poster_cloud, 
             genre, 
             country, 
@@ -517,7 +518,6 @@ def get_film_by_id(serial_id: int):
             description,
             directors,
             actors,
-            budget_dollar,
             age,
             timing_s,
             popularity,
