@@ -42,7 +42,7 @@ def get_random_top_200_films():
     try:
         # Выбираем топ-200 фильмов по популярности
         cursor.execute("""
-            SELECT id, name, poster_cloud,type
+            SELECT id, name, poster_cloud
             FROM films
             WHERE m_or_ser = 'movie'
             AND CHAR_LENGTH(name) <= 25
@@ -467,7 +467,7 @@ def get_random_top_200_serials():
     try:
         # Выбираем топ-200 фильмов по популярности
         cursor.execute("""
-            SELECT id, name, poster_cloud,type
+            SELECT id, name, poster_cloud
             FROM films
             WHERE m_or_ser = 'tv-series'
             AND CHAR_LENGTH(name) <= 25
@@ -548,7 +548,7 @@ def get_random_top_200_cartoon():
     try:
         # Выбираем топ-200 фильмов по популярности
         cursor.execute("""
-            SELECT id, name, poster_cloud,type
+            SELECT id, name, poster_cloud
             FROM films
             WHERE m_or_ser = 'cartoon'
             AND CHAR_LENGTH(name) <= 25
@@ -586,7 +586,7 @@ def get_random_top_200_serials_animated():
     try:
         # Выбираем топ-200 фильмов по популярности
         cursor.execute("""
-            SELECT id, name, poster_cloud,type
+            SELECT id, name, poster_cloud
             FROM films
             WHERE m_or_ser = 'animated-series'
             AND CHAR_LENGTH(name) <= 25
@@ -624,7 +624,7 @@ def get_random_top_200_anime():
     try:
         # Выбираем топ-200 фильмов по популярности
         cursor.execute("""
-            SELECT id, name, poster_cloud,type
+            SELECT id, name, poster_cloud
             FROM films
             WHERE m_or_ser = 'anime'
             AND CHAR_LENGTH(name) <= 25
