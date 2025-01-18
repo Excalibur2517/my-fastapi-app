@@ -647,3 +647,36 @@ def get_random_top_200_anime():
     finally:
         cursor.close()
         conn.close()
+
+
+
+
+#------------------------------------КНИГИ----------------------------------------------
+# Новый эндпоинт для получения КАТАЛОГ 1
+@app.get("/books/classes")
+def get_distinct_classes():
+    try:
+        # Устанавливаем соединение с базой данных
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Выполняем запрос
+        query = "SELECT DISTINCT class_basic FROM books_catalog bc"
+        cursor.execute(query)
+        
+        # Получаем результаты
+        results = cursor.fetchall()
+        classes = [row[0] for row in results]
+
+        # Закрываем соединение
+        cursor.close()
+        conn.close()
+
+        # Возвращаем результаты
+        return {"classes": classes}
+
+    except Error as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка при работе с базой данных: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Неожиданная ошибка: {str(e)}")
+
