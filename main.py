@@ -661,12 +661,22 @@ def get_distinct_classes():
         cursor = conn.cursor()
 
         # Выполняем запрос
-        query = "SELECT DISTINCT class_basic FROM books_catalog bc"
+        query = """
+        SELECT DISTINCT class_basic, class_level_2, class_level_3
+        FROM books_catalog bc
+        """
         cursor.execute(query)
         
         # Получаем результаты
         results = cursor.fetchall()
-        classes = [row[0] for row in results]
+        classes = [
+            {
+                "class_basic": row[0],
+                "class_level_2": row[1],
+                "class_level_3": row[2]
+            }
+            for row in results
+        ]
 
         # Закрываем соединение
         cursor.close()
@@ -679,4 +689,3 @@ def get_distinct_classes():
         raise HTTPException(status_code=500, detail=f"Ошибка при работе с базой данных: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Неожиданная ошибка: {str(e)}")
-
