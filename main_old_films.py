@@ -97,3 +97,34 @@ def get_shortest_names():
     finally:
         cursor.close()
         conn.close()
+
+# Эндпоинт для поиска фильмов по названию
+@app.get("/books/search_book_by_name_or_author/{search_text}", response_model=List[dict])
+def search_book_by_name_or_author(search_text: str):
+    """
+    Ищет книги по названию или автору и возвращает до 20 первых результатов,
+    отсортированных по популярности.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # SQL-запрос для поиска книг по названию или автору
+        query = """
+            SELECT id, poster, name, author
+            FROM books
+            WHERE name LIKE %s OR author LIKE %s
+            ORDER BY popularity DESC
+            LIMIT 20
+        """
+        cursor.execute(query, (f"%{search_text}%", f"%{search_text}%"))
+        books = cursor.fetchall()
+
+        if not books:
+            raise HTTPException(status_code=404, detail="Книги не найдены")
+        
+        return books
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
