@@ -110,7 +110,7 @@ def search_book_by_name_or_author(search_text: str):
     try:
         # SQL-запрос для поиска книг по названию или автору
         query = """
-            SELECT id, poster, name, author
+            SELECT id, poster_cloud, name, author
             FROM books
             WHERE name LIKE %s OR author LIKE %s
             ORDER BY popularity DESC
