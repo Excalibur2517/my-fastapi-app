@@ -182,7 +182,7 @@ def advanced_filter(
 
     # Финальный SQL-запрос
     query = f"""
-        SELECT DISTINCT id, name,author, description, poster_cloud, popularity, year_create, rating_ch, time_read, public_date, country_author, age
+        SELECT DISTINCT id, name,author, poster_cloud, popularity, year_create, rating_ch, time_read, public_date, country_author, age
         FROM books
         WHERE {" AND ".join(filters)}
         ORDER BY {sort_by} DESC
