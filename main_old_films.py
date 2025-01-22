@@ -7,7 +7,7 @@ import random
 
 # Данные для подключения к БД MySQL
 db_config = {
-    'host': '212.233.95.130',
+    'host': '217.16.26.244',
     'user': 'user_1',
     'password': 'Projectbd170898.!',
     'database': 'MySQL-2575'
@@ -129,85 +129,3 @@ def search_book_by_name_or_author(search_text: str):
         cursor.close()
         conn.close()
 
-# Эндпоинт для поиска книг по фильтрам
-@app.get("/books/advanced-filter/")
-def advanced_filter(
-    year_create_from: Optional[int] = Query(None, ge=-800, le=2024, description="Год создания книги от"),
-    year_create_to: Optional[int] = Query(None, ge=-800, le=2024, description="Год создания книги до"),
-    country_author: Optional[str] = Query(None, description="Страна автора"),
-    rating_ch_from: Optional[float] = Query(None, ge=0, le=5, description="Рейтинг Читай-город от"),
-    rating_ch_to: Optional[float] = Query(None, ge=0, le=5, description="Рейтинг Читай-город до"),
-    age: Optional[str] = Query(None, description="Возрастное ограничение"),
-    time_read_from: Optional[int] = Query(None, ge=0, le=200, description="Время чтения от (часов)"),
-    time_read_to: Optional[int] = Query(None, ge=0, le=200, description="Время чтения до (часов)"),
-    public_date_from: Optional[int] = Query(None, ge=1600, le=2024, description="Дата публикации от"),
-    public_date_to: Optional[int] = Query(None, ge=1600, le=2024, description="Дата публикации до"),
-    sort_by: Optional[str] = Query("popularity", description="Сортировка по: popularity, rating_ch или public_date")
-):
-    filters = []
-    params = []
-
-    # Установка фильтров по диапазонам
-    def add_filter(field, from_value, to_value):
-        if from_value is not None:
-            filters.append(f"{field} >= %s")
-            params.append(from_value)
-        if to_value is not None:
-            filters.append(f"{field} <= %s")
-            params.append(to_value)
-
-    # Добавление фильтров
-    add_filter("year_create", year_create_from, year_create_to)
-    add_filter("rating_ch", rating_ch_from, rating_ch_to)
-    add_filter("time_read", time_read_from, time_read_to)
-    add_filter("public_date", public_date_from, public_date_to)
-
-    # Фильтрация по стране автора
-    if country_author:
-        filters.append("country_author = %s")
-        params.append(country_author)
-
-    # Фильтрация по возрастному ограничению
-    if age:
-        filters.append("age = %s")
-        params.append(age)
-
-    # Проверка сортировки
-    valid_sort_columns = ["popularity", "rating_ch", "public_date"]
-    if sort_by not in valid_sort_columns:
-        raise HTTPException(status_code=400, detail="Некорректное значение sort_by")
-
-    # Финальный SQL-запрос
-    query = f"""
-        SELECT DISTINCT books.*
-        FROM books
-        WHERE {" AND ".join(filters)}
-        ORDER BY {sort_by} DESC
-        LIMIT 100
-    """
-
-    # Выполнение запроса
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        print("SQL Query:", query)
-        print("Parameters:", params)
-        cursor.execute(query, params)
-        rows = cursor.fetchall()
-        return rows
-    except Exception as e:
-        print("Error executing query:", str(e))
-        raise HTTPException(status_code=500, detail=f"Ошибка выполнения запроса: {str(e)}")
-    finally:
-        cursor.close()
-        conn.close()
-
-# Функция для получения соединения с базой данных (пример, настройте под свои нужды)
-def get_db_connection():
-    import mysql.connector
-    return mysql.connector.connect(
-        host="localhost",
-        user="your_user",
-        password="your_password",
-        database="your_database"
-    )
