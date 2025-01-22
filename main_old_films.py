@@ -166,7 +166,7 @@ def advanced_filter(
     if country_author:
         country_list = country_author.split(",")
         country_placeholders = ", ".join(["%s"] * len(country_list))
-        filters.append(f"books.id IN (SELECT DISTINCT id_book FROM books_country_author_link WHERE id_country IN (SELECT id FROM countries WHERE country IN ({country_placeholders})))")
+        filters.append(f"country_author IN ({country_placeholders})")
         params.extend(country_list)
 
     # Фильтрация по возрастному ограничению
@@ -194,9 +194,14 @@ def advanced_filter(
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
+        print("SQL Query:", query)
+        print("Parameters:", params)
         cursor.execute(query, params)
         rows = cursor.fetchall()
         return rows
+    except Exception as e:
+        print("Error executing query:", str(e))
+        raise HTTPException(status_code=500, detail=f"Ошибка выполнения запроса: {str(e)}")
     finally:
         cursor.close()
         conn.close()
