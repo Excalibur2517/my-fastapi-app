@@ -137,7 +137,7 @@ def advanced_filter(
     country_author: Optional[str] = Query(None, description="Страна автора"),
     rating_ch_from: Optional[float] = Query(None, ge=0, le=5, description="Рейтинг Читай-город от"),
     rating_ch_to: Optional[float] = Query(None, ge=0, le=5, description="Рейтинг Читай-город до"),
-    age: Optional[str] = Query(None, description="Возрастное ограничение (через запятую)"),
+    age: Optional[str] = Query(None, description="Возрастное ограничение"),
     time_read_from: Optional[int] = Query(None, ge=0, le=200, description="Время чтения от (часов)"),
     time_read_to: Optional[int] = Query(None, ge=0, le=200, description="Время чтения до (часов)"),
     public_date_from: Optional[int] = Query(None, ge=1600, le=2024, description="Дата публикации от"),
@@ -169,10 +169,8 @@ def advanced_filter(
 
     # Фильтрация по возрастному ограничению
     if age:
-        age_list = age.split(",")
-        age_placeholders = ", ".join(["%s"] * len(age_list))
-        filters.append(f"age IN ({age_placeholders})")
-        params.extend(age_list)
+        filters.append("age = %s")
+        params.append(age)
 
     # Проверка сортировки
     valid_sort_columns = ["popularity", "rating_ch", "public_date"]
