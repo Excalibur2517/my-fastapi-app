@@ -134,7 +134,7 @@ def search_book_by_name_or_author(search_text: str):
 def advanced_filter(
     year_create_from: Optional[int] = Query(None, ge=-800, le=2024, description="Год создания книги от"),
     year_create_to: Optional[int] = Query(None, ge=-800, le=2024, description="Год создания книги до"),
-    country_author: Optional[str] = Query(None, description="Страна автора (через запятую)"),
+    country_author: Optional[str] = Query(None, description="Страна автора"),
     rating_ch_from: Optional[float] = Query(None, ge=0, le=5, description="Рейтинг Читай-город от"),
     rating_ch_to: Optional[float] = Query(None, ge=0, le=5, description="Рейтинг Читай-город до"),
     age: Optional[str] = Query(None, description="Возрастное ограничение (через запятую)"),
@@ -164,10 +164,8 @@ def advanced_filter(
 
     # Фильтрация по стране автора
     if country_author:
-        country_list = country_author.split(",")
-        country_placeholders = ", ".join(["%s"] * len(country_list))
-        filters.append(f"country_author IN ({country_placeholders})")
-        params.extend(country_list)
+        filters.append("country_author = %s")
+        params.append(country_author)
 
     # Фильтрация по возрастному ограничению
     if age:
@@ -205,3 +203,13 @@ def advanced_filter(
     finally:
         cursor.close()
         conn.close()
+
+# Функция для получения соединения с базой данных (пример, настройте под свои нужды)
+def get_db_connection():
+    import mysql.connector
+    return mysql.connector.connect(
+        host="localhost",
+        user="your_user",
+        password="your_password",
+        database="your_database"
+    )
