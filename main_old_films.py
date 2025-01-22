@@ -182,7 +182,7 @@ def advanced_filter(
 
     # Финальный SQL-запрос
     query = f"""
-        SELECT DISTINCT books.*
+        SELECT DISTINCT id, name, description, poster_cloud, popularity, year_create, rating_ch, time_read, public_date, country_author, age
         FROM books
         WHERE {" AND ".join(filters)}
         ORDER BY {sort_by} DESC
@@ -193,8 +193,6 @@ def advanced_filter(
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        print("SQL Query:", query)
-        print("Parameters:", params)
         cursor.execute(query, params)
         rows = cursor.fetchall()
         return rows
