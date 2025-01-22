@@ -202,3 +202,51 @@ def advanced_filter(
     finally:
         cursor.close()
         conn.close()
+
+
+
+@app.get("/books/search_book_by_id/{book_id}")
+def get_book_by_id(book_id: int):
+    """
+    Возвращает информацию о книге (id, name, author, year_izd, year_create, seria,
+    number_pages, country_author, rating_ch, poster, age, time_read, description,
+    universe_comics, seria_comics, razdel_comics, public_date, poster_cloud,
+    popularity, votes, tirazh) по указанному book_id.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        sql = """
+        SELECT 
+            id, 
+            name, 
+            author, 
+            year_izd, 
+            year_create, 
+            seria, 
+            number_pages, 
+            country_author, 
+            rating_ch, 
+            poster, 
+            age, 
+            time_read, 
+            description, 
+            universe_comics, 
+            seria_comics, 
+            razdel_comics, 
+            public_date, 
+            poster_cloud, 
+            popularity, 
+            votes, 
+            tirazh
+        FROM books
+        WHERE id = %s
+        """
+        cursor.execute(sql, (book_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Book not found")
+        return row
+    finally:
+        cursor.close()
+        conn.close()
