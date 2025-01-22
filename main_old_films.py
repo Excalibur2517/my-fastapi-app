@@ -133,10 +133,10 @@ def search_book_by_name_or_author(search_text: str):
 def advanced_filter(
     year_create_from: Optional[int] = Query(None, ge=-800, le=2024, description="Год создания книги от"),
     year_create_to: Optional[int] = Query(None, ge=-800, le=2024, description="Год создания книги до"),
-    country_author: Optional[str] = Query(None, description="Страна автора"),
+    country_author: Optional[str] = Query(None, description="Страны автора через запятую"),
     rating_ch_from: Optional[float] = Query(None, ge=0, le=5, description="Рейтинг Читай-город от"),
     rating_ch_to: Optional[float] = Query(None, ge=0, le=5, description="Рейтинг Читай-город до"),
-    age: Optional[str] = Query(None, description="Возрастное ограничение"),
+    age: Optional[str] = Query(None, description="Возрастные ограничения через запятую"),
     time_read_from: Optional[int] = Query(None, ge=0, le=200, description="Время чтения от (часов)"),
     time_read_to: Optional[int] = Query(None, ge=0, le=200, description="Время чтения до (часов)"),
     public_date_from: Optional[int] = Query(None, ge=1600, le=2024, description="Дата публикации от"),
@@ -161,15 +161,19 @@ def advanced_filter(
     add_filter("time_read", time_read_from, time_read_to)
     add_filter("public_date", public_date_from, public_date_to)
 
-    # Фильтрация по стране автора
+    # Фильтрация по странам автора
     if country_author:
-        filters.append("country_author = %s")
-        params.append(country_author)
+        countries = country_author.split(",")
+        country_conditions = " OR ".join(["country_author = %s" for _ in countries])
+        filters.append(f"({country_conditions})")
+        params.extend(countries)
 
-    # Фильтрация по возрастному ограничению
+    # Фильтрация по возрастным ограничениям
     if age:
-        filters.append("age = %s")
-        params.append(age)
+        ages = age.split(",")
+        age_conditions = " OR ".join(["age = %s" for _ in ages])
+        filters.append(f"({age_conditions})")
+        params.extend(ages)
 
     # Проверка сортировки
     valid_sort_columns = ["popularity", "rating_ch", "public_date"]
