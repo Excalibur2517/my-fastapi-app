@@ -176,7 +176,7 @@ def advanced_filter(
         params.extend(ages)
 
     # Проверка сортировки
-    valid_sort_columns = ["popularity", "rating_ch", "public_date"]
+    valid_sort_columns = ["popularity", "rating_ch", "year_create"]
     if sort_by not in valid_sort_columns:
         raise HTTPException(status_code=400, detail="Некорректное значение sort_by")
 
