@@ -307,3 +307,33 @@ def get_films_by_block_id(block_id: int):
     finally:
         cursor.close()
         conn.close()
+
+
+# Эндпоинт для получения фильмов по ID подборки
+@app.get("/books/collections_info/{collection_id}", response_model=List[dict])
+def get_films_by_collection(collection_id: int):
+    """
+    Возвращает всю информацию о фильмах, которые относятся к указанной подборке.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Исправленный SQL-запрос для получения фильмов по ID подборки
+        cursor.execute("""
+            SELECT b.id, b.name,b.author, b.poster_cloud, b.year_create, b.rating_ch, b.time_read,  b.country_author, b.age
+            FROM books b
+            JOIN books_collection_link cl ON b.id = cl.book_id
+            WHERE cl.collection_id = %s
+        """, (collection_id,))
+        
+        films = cursor.fetchall()
+
+        if not films:
+            raise HTTPException(status_code=404, detail="Фильмы не найдены для данной подборки")
+        
+        return films
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
