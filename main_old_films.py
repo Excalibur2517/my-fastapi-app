@@ -204,7 +204,7 @@ def advanced_filter(
         conn.close()
 
 
-
+#Поиск по фильтрам
 @app.get("/books/search_book_by_id/{book_id}")
 def get_book_by_id(book_id: int):
     """
@@ -247,6 +247,32 @@ def get_book_by_id(book_id: int):
         if not row:
             raise HTTPException(status_code=404, detail="Book not found")
         return row
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
+# Новый эндпоинт для получения всех блоков подборок
+@app.get("/books/blocks_of_collection/", response_model=List[dict])
+def get_films_collections():
+    """
+    Возвращает все строки из таблицы films_collection_blocks с полями name и poster.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # SQL-запрос для получения данных из таблицы
+        cursor.execute("SELECT id,name, poster FROM books_collection_blocks")
+        rows = cursor.fetchall()
+        
+        # Проверка на пустой результат
+        if not rows:
+            raise HTTPException(status_code=404, detail="No collection blocks found")
+        
+        return rows
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
         conn.close()
