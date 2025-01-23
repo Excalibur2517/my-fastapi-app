@@ -290,9 +290,9 @@ def get_films_by_block_id(block_id: int):
     try:
         # SQL-запрос для получения данных по block_id
         cursor.execute("""
-            SELECT id, block_id, name, poster 
+            SELECT id, blocks_id, name, poster 
             FROM books_collections 
-            WHERE block_id = %s
+            WHERE blocks_id = %s
         """, (block_id,))
         
         rows = cursor.fetchall()
