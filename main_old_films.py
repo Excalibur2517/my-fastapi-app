@@ -322,7 +322,7 @@ def get_films_by_collection(collection_id: int):
         cursor.execute("""
             SELECT b.id, b.name,b.author, b.poster_cloud, b.year_create, b.rating_ch, b.time_read,  b.country_author, b.age
             FROM books b
-            JOIN books_collection_link cl ON b.id = cl.book_id
+            JOIN books_collections_link cl ON b.id = cl.book_id
             WHERE cl.collection_id = %s
         """, (collection_id,))
         
