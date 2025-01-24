@@ -234,29 +234,32 @@ def get_book_by_id(book_id: int):
     try:
         sql = """
         SELECT 
-            id, 
-            name, 
-            author, 
-            year_izd, 
-            year_create, 
-            seria, 
-            number_pages, 
-            country_author, 
-            rating_ch, 
-            poster, 
-            age, 
-            time_read, 
-            description, 
-            universe_comics, 
-            seria_comics, 
-            razdel_comics, 
-            public_date, 
-            poster_cloud, 
-            popularity, 
-            votes, 
-            tirazh
-        FROM books
-        WHERE id = %s
+            b.id, 
+            b.name, 
+            b.author, 
+            b.year_izd, 
+            b.year_create, 
+            b.seria, 
+            b.number_pages, 
+            b.country_author, 
+            b.rating_ch, 
+            b.poster, 
+            b.age, 
+            b.time_read, 
+            b.description, 
+            b.universe_comics, 
+            b.seria_comics, 
+            b.razdel_comics, 
+            b.public_date, 
+            b.poster_cloud, 
+            b.popularity, 
+            b.votes, 
+            b.tirazh,
+            GROUP_CONCAT(bc.class_basic) AS categories
+        FROM books b
+        LEFT JOIN books_catalog bc ON b.id = bc.link_id
+        WHERE b.id = %s
+        GROUP BY b.id
         """
         cursor.execute(sql, (book_id,))
         row = cursor.fetchone()
