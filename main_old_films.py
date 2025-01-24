@@ -190,14 +190,15 @@ def advanced_filter(
 
     # Финальный SQL-запрос
     query = f"""
-        SELECT DISTINCT b.id, b.name, b.author, b.poster_cloud, b.popularity, b.year_create, b.rating_ch, b.time_read, b.public_date, b.country_author, b.age
+        SELECT DISTINCT b.id, b.name, b.author, b.poster_cloud, b.popularity, b.year_create, b.rating_ch, b.time_read, b.public_date, b.country_author, b.age, 
+        GROUP_CONCAT(bc.class_basic) AS categories
         FROM books b
         LEFT JOIN books_catalog bc ON b.id = bc.link_id
         WHERE {" AND ".join(filters)}
+        GROUP BY b.id
         ORDER BY {sort_by} DESC
         LIMIT 100
     """
-
     # Выполнение запроса
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
