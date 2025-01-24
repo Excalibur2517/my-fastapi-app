@@ -179,7 +179,7 @@ def advanced_filter(
     # Фильтрация по категориям
     if category:
         categories = category.split(",")
-        category_conditions = " OR ".join(["books_catalog.class_basic = %s" for _ in categories])
+        category_conditions = " OR ".join(["bc.class_basic = %s" for _ in categories])
         filters.append(f"({category_conditions})")
         params.extend(categories)
 
@@ -194,11 +194,16 @@ def advanced_filter(
         GROUP_CONCAT(bc.class_basic) AS categories
         FROM books b
         LEFT JOIN books_catalog bc ON b.id = bc.link_id
-        WHERE {" AND ".join(filters)}
+        WHERE {" AND ".join(filters) if filters else "1=1"}
         GROUP BY b.id
         ORDER BY {sort_by} DESC
         LIMIT 100
     """
+
+    # Debug SQL-запроса
+    print("Executing query:", query)
+    print("With parameters:", params)
+
     # Выполнение запроса
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -212,6 +217,7 @@ def advanced_filter(
     finally:
         cursor.close()
         conn.close()
+
 
 
 #Поиск по фильтрам
