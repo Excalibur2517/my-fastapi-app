@@ -128,7 +128,7 @@ def search_book_by_name_or_author(search_text: str):
     finally:
         cursor.close()
         conn.close()
-
+#Продвинутый фильтр
 @app.get("/books/advanced-filter/")
 def advanced_filter(
     year_create_from: Optional[int] = Query(None, ge=-800, le=2024, description="Год создания книги от"),
@@ -141,7 +141,8 @@ def advanced_filter(
     time_read_to: Optional[int] = Query(None, ge=0, le=200, description="Время чтения до (часов)"),
     public_date_from: Optional[int] = Query(None, ge=1600, le=2024, description="Дата публикации от"),
     public_date_to: Optional[int] = Query(None, ge=1600, le=2024, description="Дата публикации до"),
-    sort_by: Optional[str] = Query("popularity", description="Сортировка по: popularity, rating_ch или public_date")
+    category: Optional[str] = Query(None, description="Категории книги через запятую"),
+    sort_by: Optional[str] = Query("popularity", description="Сортировка по: popularity, rating_ch, public_date или year_create")
 ):
     filters = []
     params = []
@@ -175,15 +176,23 @@ def advanced_filter(
         filters.append(f"({age_conditions})")
         params.extend(ages)
 
+    # Фильтрация по категориям
+    if category:
+        categories = category.split(",")
+        category_conditions = " OR ".join(["books_catalog.class_basic = %s" for _ in categories])
+        filters.append(f"({category_conditions})")
+        params.extend(categories)
+
     # Проверка сортировки
-    valid_sort_columns = ["popularity", "rating_ch", "year_create"]
+    valid_sort_columns = ["popularity", "rating_ch", "year_create", "public_date"]
     if sort_by not in valid_sort_columns:
         raise HTTPException(status_code=400, detail="Некорректное значение sort_by")
 
     # Финальный SQL-запрос
     query = f"""
-        SELECT DISTINCT id, name,author, poster_cloud, popularity, year_create, rating_ch, time_read, public_date, country_author, age
-        FROM books
+        SELECT DISTINCT b.id, b.name, b.author, b.poster_cloud, b.popularity, b.year_create, b.rating_ch, b.time_read, b.public_date, b.country_author, b.age
+        FROM books b
+        LEFT JOIN books_catalog bc ON b.id = bc.link_id
         WHERE {" AND ".join(filters)}
         ORDER BY {sort_by} DESC
         LIMIT 100
