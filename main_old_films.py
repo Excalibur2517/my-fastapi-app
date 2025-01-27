@@ -328,27 +328,54 @@ def get_films_by_block_id(block_id: int):
         conn.close()
 
 
-# Эндпоинт для получения фильмов по ID подборки
+from fastapi import FastAPI, HTTPException
+from typing import List
+from mysql.connector import Error
+
+app = FastAPI()
+
+def get_db_connection():
+    # Здесь должна быть ваша функция подключения к базе данных
+    pass
+
 @app.get("/books/collections_info/{collection_id}", response_model=List[dict])
 def get_films_by_collection(collection_id: int):
     """
-    Возвращает всю информацию о фильмах, которые относятся к указанной подборке.
+    Возвращает всю информацию о книгах, которые относятся к указанной подборке,
+    включая категории.
     """
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        # Исправленный SQL-запрос для получения фильмов по ID подборки
+        # SQL-запрос для получения информации о книгах и их категориях
         cursor.execute("""
-            SELECT b.id, b.name,b.author, b.poster_cloud, b.year_create, b.rating_ch, b.time_read,  b.country_author, b.age
-            FROM books b
-            JOIN books_collections_link cl ON b.id = cl.book_id
-            WHERE cl.collection_id = %s
+            SELECT 
+                b.id, 
+                b.name, 
+                b.author, 
+                b.poster_cloud, 
+                b.year_create, 
+                b.rating_ch, 
+                b.time_read, 
+                b.country_author, 
+                b.age, 
+                GROUP_CONCAT(DISTINCT bc.class_basic) AS categories
+            FROM 
+                books b
+            JOIN 
+                books_collections_link cl ON b.id = cl.book_id
+            LEFT JOIN 
+                books_catalog bc ON b.id = bc.link_id
+            WHERE 
+                cl.collection_id = %s
+            GROUP BY 
+                b.id
         """, (collection_id,))
         
         films = cursor.fetchall()
 
         if not films:
-            raise HTTPException(status_code=404, detail="Фильмы не найдены для данной подборки")
+            raise HTTPException(status_code=404, detail="Книги не найдены для данной подборки")
         
         return films
     except Error as e:
