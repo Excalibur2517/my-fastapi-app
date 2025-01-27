@@ -328,15 +328,6 @@ def get_films_by_block_id(block_id: int):
         conn.close()
 
 
-from fastapi import FastAPI, HTTPException
-from typing import List
-from mysql.connector import Error
-
-app = FastAPI()
-
-def get_db_connection():
-    # Здесь должна быть ваша функция подключения к базе данных
-    pass
 
 # Здесь должна быть ваша функция подключения к базе данных
 @app.get("/books/collections_info/{collection_id}", response_model=List[dict])
