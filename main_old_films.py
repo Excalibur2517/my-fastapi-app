@@ -338,6 +338,7 @@ def get_db_connection():
     # Здесь должна быть ваша функция подключения к базе данных
     pass
 
+# Здесь должна быть ваша функция подключения к базе данных
 @app.get("/books/collections_info/{collection_id}", response_model=List[dict])
 def get_films_by_collection(collection_id: int):
     """
