@@ -7,7 +7,7 @@ import random
 
 # Данные для подключения к БД MySQL
 db_config = {
-    'host': '217.16.26.244',
+    'host': '212.233.95.130',
     'user': 'user_1',
     'password': 'Projectbd170898.!',
     'database': 'MySQL-2575'
