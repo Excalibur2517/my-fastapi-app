@@ -99,12 +99,18 @@ def get_shortest_names():
         conn.close()
 
 # Эндпоинт для поиска книг по названию
+# Эндпоинт для поиска книг по названию или автору
 @app.get("/books/search_book_by_name_or_author/{search_text}", response_model=List[dict])
 def search_book_by_name_or_author(search_text: str):
     """
     Ищет книги по названию или автору и возвращает до 20 первых результатов,
     отсортированных по началу совпадения, затем по популярности.
+    Если запрос пустой, возвращает пустой список.
     """
+    # Проверка на пустую строку
+    if not search_text.strip():
+        return []  # Возвращаем пустой список
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -130,15 +136,13 @@ def search_book_by_name_or_author(search_text: str):
         cursor.execute(query, (partial_match, partial_match, start_match, start_match))
         books = cursor.fetchall()
 
-        if not books:
-            raise HTTPException(status_code=404, detail="Книги не найдены")
-        
-        return books
+        return books  # Возвращаем список книг
     except Error as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
         conn.close()
+
 
 #Продвинутый фильтр
 @app.get("/books/advanced-filter/")
