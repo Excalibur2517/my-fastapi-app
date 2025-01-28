@@ -147,7 +147,6 @@ def advanced_filter(
     filters = []
     params = []
 
-    # Установка фильтров по диапазонам
     def add_filter(field, from_value, to_value):
         if from_value is not None:
             filters.append(f"{field} >= %s")
@@ -156,41 +155,35 @@ def advanced_filter(
             filters.append(f"{field} <= %s")
             params.append(to_value)
 
-    # Добавление фильтров
     add_filter("year_create", year_create_from, year_create_to)
     add_filter("rating_ch", rating_ch_from, rating_ch_to)
     add_filter("time_read", time_read_from, time_read_to)
     add_filter("public_date", public_date_from, public_date_to)
 
-    # Фильтрация по странам автора
     if country_author:
         countries = country_author.split(",")
         country_conditions = " OR ".join(["country_author = %s" for _ in countries])
         filters.append(f"({country_conditions})")
         params.extend(countries)
 
-    # Фильтрация по возрастным ограничениям
     if age:
         ages = age.split(",")
         age_conditions = " OR ".join(["age = %s" for _ in ages])
         filters.append(f"({age_conditions})")
         params.extend(ages)
 
-    # Фильтрация по категориям
     if category:
         categories = category.split(",")
         category_conditions = " OR ".join(["bc.class_basic = %s" for _ in categories])
         filters.append(f"({category_conditions})")
         params.extend(categories)
 
-    # Проверка сортировки
     valid_sort_columns = ["popularity", "rating_ch", "year_create", "public_date"]
     if sort_by not in valid_sort_columns:
         raise HTTPException(status_code=400, detail="Некорректное значение sort_by")
 
-    # Финальный SQL-запрос
     query = f"""
-        SELECT DISTINCT b.id, b.name, b.author, b.poster_cloud, b.popularity, b.year_create, b.rating_ch, b.time_read, b.public_date, b.country_author, b.age, 
+        SELECT DISTINCT b.id, b.name, b.author, b.poster_cloud, b.popularity, b.year_create, b.rating_ch, b.time_read, b.public_date, b.country_author, b.age,
         GROUP_CONCAT(bc.class_basic) AS categories
         FROM books b
         LEFT JOIN books_catalog bc ON b.id = bc.link_id
@@ -200,11 +193,13 @@ def advanced_filter(
         LIMIT 100
     """
 
-    # Debug SQL-запроса
-    print("Executing query:", query)
-    print("With parameters:", params)
+    # Debug SQL-запроса (ОПЦИОНАЛЬНО: ЛОГИРУЕТ ТОЛЬКО ЕСЛИ DEBUG ВКЛЮЧЕН)
+    import os
+    DEBUG = os.getenv("DEBUG_SQL", "false").lower() == "true"
+    if DEBUG:
+        print("Executing query:", query)
+        print("With parameters:", params)
 
-    # Выполнение запроса
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
