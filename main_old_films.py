@@ -103,7 +103,7 @@ def get_shortest_names():
 def search_book_by_name_or_author(search_text: str):
     """
     Ищет книги по названию или автору и возвращает до 20 первых результатов,
-    отсортированных по началу совпадения, затем по популярности.
+    отсортированных по популярности.
     """
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -113,21 +113,10 @@ def search_book_by_name_or_author(search_text: str):
             SELECT id, poster_cloud, name, author
             FROM books
             WHERE name LIKE %s OR author LIKE %s
-            ORDER BY 
-                CASE 
-                    WHEN name LIKE %s THEN 1
-                    WHEN author LIKE %s THEN 2
-                    ELSE 3
-                END,
-                popularity DESC
+            ORDER BY popularity DESC
             LIMIT 20
         """
-        # Значения для совпадения в начале текста
-        start_match = f"{search_text}%"
-        # Значения для частичного совпадения
-        partial_match = f"%{search_text}%"
-        
-        cursor.execute(query, (partial_match, partial_match, start_match, start_match))
+        cursor.execute(query, (f"%{search_text}%", f"%{search_text}%"))
         books = cursor.fetchall()
 
         if not books:
