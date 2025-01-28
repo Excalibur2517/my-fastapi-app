@@ -424,3 +424,71 @@ def search_books(
     finally:
         cursor.close()
         conn.close()
+
+
+@app.get("/books/by_category/")
+def get_books_by_category(
+    class_basic: Optional[str] = Query(None, description="Основная категория"),
+    class_level_2: Optional[str] = Query(None, description="Подкатегория 2-го уровня"),
+    class_level_3: Optional[str] = Query(None, description="Подкатегория 3-го уровня"),
+    offset: int = Query(0, ge=0, description="Смещение записей для пагинации"),
+    limit: int = Query(20, ge=1, le=100, description="Количество записей для возврата"),
+    sort_by: str = Query("popularity", description="Сортировка по полю: popularity, rating_ch, year_create"),
+):
+    """
+    Эндпоинт для получения книг по категориям с пагинацией и сортировкой.
+    """
+    # Допустимые поля для сортировки
+    valid_sort_columns = ["popularity", "rating_ch", "year_create"]
+    if sort_by not in valid_sort_columns:
+        raise HTTPException(status_code=400, detail=f"Некорректное значение sort_by. Допустимые значения: {valid_sort_columns}")
+
+    # Создаем фильтры на основе переданных параметров
+    filters = []
+    params = []
+
+    if class_basic:
+        filters.append("bc.class_basic = %s")
+        params.append(class_basic)
+    if class_level_2:
+        filters.append("bc.class_level_2 = %s")
+        params.append(class_level_2)
+    if class_level_3:
+        filters.append("bc.class_level_3 = %s")
+        params.append(class_level_3)
+
+    # Если не переданы параметры категории, возвращаем ошибку
+    if not filters:
+        raise HTTPException(status_code=400, detail="Необходимо указать хотя бы одну категорию.")
+
+    # Основной SQL-запрос
+    query = f"""
+        SELECT DISTINCT b.id, b.name, b.author, b.poster_cloud, b.popularity, b.rating_ch, 
+                        b.year_create, b.number_pages, b.country_author, b.time_read, b.age
+        FROM books_catalog bc
+        INNER JOIN books b ON bc.link_id = b.id
+        WHERE {" AND ".join(filters)}
+        ORDER BY b.{sort_by} DESC
+        LIMIT %s OFFSET %s
+    """
+
+    # Добавляем лимит и смещение к параметрам
+    params.extend([limit, offset])
+
+    # Выполняем запрос к базе данных
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+
+        # Если ничего не найдено, возвращаем 404
+        if not rows:
+            raise HTTPException(status_code=404, detail="Книги не найдены для указанных категорий.")
+
+        return rows
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
