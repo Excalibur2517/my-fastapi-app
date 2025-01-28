@@ -370,3 +370,57 @@ def get_films_by_collection(collection_id: int):
     finally:
         cursor.close()
         conn.close()
+
+# Эндпоинт для поиска книг
+@app.get("/books/search_by_fields/")
+def search_books(
+    universe_comics: Optional[str] = Query(None, description="Universe Comics для фильтрации"),
+    seria_comics: Optional[str] = Query(None, description="Seria Comics для фильтрации"),
+    razdel_comics: Optional[str] = Query(None, description="Раздел комиксов для фильтрации"),
+    seria: Optional[str] = Query(None, description="Серия для фильтрации"),
+):
+    filters = []
+    params = []
+
+    # Фильтры по каждому полю
+    if universe_comics:
+        filters.append("universe_comics = %s")
+        params.append(universe_comics)
+    if seria_comics:
+        filters.append("seria_comics = %s")
+        params.append(seria_comics)
+    if razdel_comics:
+        filters.append("razdel_comics = %s")
+        params.append(razdel_comics)
+    if seria:
+        filters.append("seria = %s")
+        params.append(seria)
+
+    # Если фильтры не заданы, вернуть ошибку
+    if not filters:
+        raise HTTPException(status_code=400, detail="Нужно указать хотя бы один параметр для поиска.")
+
+    # Формирование SQL-запроса
+    query = f"""
+        SELECT id, name, author, year_izd, year_create, seria, number_pages,
+               country_author, rating_ch, poster_cloud, age, time_read, description,
+               universe_comics, seria_comics, razdel_comics, public_date, popularity, votes, tirazh
+        FROM books
+        WHERE {" AND ".join(filters)}
+        ORDER BY popularity DESC
+        LIMIT 100
+    """
+
+    # Выполнение SQL-запроса
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(query, params)
+        books = cursor.fetchall()
+        return books
+    except Error as e:
+        print("Error:", e)
+        raise HTTPException(status_code=500, detail="Ошибка базы данных")
+    finally:
+        cursor.close()
+        conn.close()
