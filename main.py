@@ -364,24 +364,33 @@ def get_films_by_collection(collection_id: int):
         cursor.close()
         conn.close()
 
-# Эндпоинт для поиска фильмов по названию
 @app.get("/films/search_film_by_name/{search_text}", response_model=List[dict])
 def search_film_by_name(search_text: str):
     """
-    Ищет фильмы по названию и возвращает 20 первых результатов, отсортированных по popularity.
+    Ищет фильмы по названию и возвращает 20 первых результатов,
+    отсортированных по началу совпадения, затем по популярности.
     """
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
         # SQL-запрос для поиска фильмов по названию
         query = """
-            SELECT id, name, poster_cloud, popularity,rating_kp,rating_imdb,rating_critics,genre,country,year_prem
+            SELECT id, name, poster_cloud, popularity, rating_kp, rating_imdb, rating_critics, genre, country, year_prem, m_or_ser
             FROM films
-            WHERE m_or_ser = 'movie' AND name LIKE %s
-            ORDER BY popularity DESC
+            WHERE  name LIKE %s
+            ORDER BY 
+                CASE 
+                    WHEN name LIKE %s THEN 1
+                    ELSE 2
+                END,
+                popularity DESC
             LIMIT 20
         """
-        cursor.execute(query, (f"%{search_text}%",))
+        # Значения для совпадения
+        start_match = f"{search_text}%"  # Совпадение в начале текста
+        partial_match = f"%{search_text}%"  # Частичное совпадение
+
+        cursor.execute(query, (partial_match, start_match))
         films = cursor.fetchall()
 
         if not films:
@@ -393,6 +402,7 @@ def search_film_by_name(search_text: str):
     finally:
         cursor.close()
         conn.close()
+
 
 
 # Новый эндпоинт для получения фильмов по жанру
