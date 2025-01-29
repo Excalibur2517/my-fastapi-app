@@ -1041,7 +1041,7 @@ def get_films_collections():
         conn.close()
 
 # Новый эндпоинт для получения фильмов по ID блока
-@app.get("/films/single_block_by_id/{block_id}", response_model=List[dict])
+@app.get("/cartoon/single_block_by_id/{block_id}", response_model=List[dict])
 def get_films_by_block_id(block_id: int):
     """
     Возвращает все данные из таблицы films_collections, соответствующие переданному block_id.
