@@ -1082,7 +1082,7 @@ def get_films_by_collection(collection_id: int):
         cursor.execute("""
             SELECT f.id,f.name,f.country,f.rating_kp,f.rating_imdb,f.rating_critics,f.genre,f.poster_cloud,f.year_prem,f.popularity,f.m_or_ser
             FROM films f
-            JOIN cartoons_collections_link cl ON f.id = cl.films_id
+            JOIN cartoons_collections_link cl ON f.id = cl.film_id
             WHERE cl.collection_id = %s
         """, (collection_id,))
         
