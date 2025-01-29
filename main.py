@@ -631,6 +631,31 @@ def get_films_by_genre(
     finally:
         cursor.close()
         conn.close()
+
+# Новый эндпоинт для получения всех блоков подборок
+@app.get("/series/blocks_of_collection/", response_model=List[dict])
+def get_films_collections():
+    """
+    Возвращает все строки из таблицы series_collection_blocks с полями name и poster.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # SQL-запрос для получения данных из таблицы
+        cursor.execute("SELECT id,name, poster FROM series_collections_blocks")
+        rows = cursor.fetchall()
+        
+        # Проверка на пустой результат
+        if not rows:
+            raise HTTPException(status_code=404, detail="No collection blocks found")
+        
+        return rows
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
 #----------------------------------------Мультфильмы---------------------------------
 # Эндпоинт для получения 20 случайных фильмов из топ-200 по популярности
 @app.get("/cartoon/random_top200/")
