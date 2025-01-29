@@ -1069,6 +1069,35 @@ def get_films_by_block_id(block_id: int):
         cursor.close()
         conn.close()
 
+# Эндпоинт для получения фильмов по ID подборки
+@app.get("/cartoon/collections_info/{collection_id}", response_model=List[dict])
+def get_films_by_collection(collection_id: int):
+    """
+    Возвращает всю информацию о фильмах, которые относятся к указанной подборке.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Исправленный SQL-запрос для получения фильмов по ID подборки
+        cursor.execute("""
+            SELECT f.id,f.name,f.country,f.rating_kp,f.rating_imdb,f.rating_critics,f.genre,f.poster_cloud,f.year_prem,f.popularity,f.m_or_ser
+            FROM films f
+            JOIN cartoons_collections_link cl ON f.id = cl.films_id
+            WHERE cl.collection_id = %s
+        """, (collection_id,))
+        
+        films = cursor.fetchall()
+
+        if not films:
+            raise HTTPException(status_code=404, detail="Фильмы не найдены для данной подборки")
+        
+        return films
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
 #----------------------------------------Анимационные Сериалы---------------------------------
 # Эндпоинт для получения 20 случайных фильмов из топ-200 по популярности
 @app.get("/serials_animated/random_top200/")
