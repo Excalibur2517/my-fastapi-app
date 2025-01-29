@@ -870,6 +870,93 @@ def get_shortest_names():
     finally:
         cursor.close()
         conn.close()
+
+@app.get("/cartoon/advanced-filter/")
+def advanced_filter(
+    genres: Optional[str] = Query(None, description="Жанры фильма (через запятую)"),
+    countries: Optional[str] = Query(None, description="Страны производства (через запятую)"),
+    year_from: Optional[int] = Query(None, ge=1874, le=2025, description="Год выпуска от"),
+    year_to: Optional[int] = Query(None, ge=1874, le=2025, description="Год выпуска до"),
+    kp_from: Optional[float] = Query(None, ge=0, le=10, description="Рейтинг КП от"),
+    kp_to: Optional[float] = Query(None, ge=0, le=10, description="Рейтинг КП до"),
+    imdb_from: Optional[float] = Query(None, ge=0, le=10, description="Рейтинг IMDb от"),
+    imdb_to: Optional[float] = Query(None, ge=0, le=10, description="Рейтинг IMDb до"),
+    critics_from: Optional[float] = Query(None, ge=0, le=10, description="Рейтинг критиков от"),
+    critics_to: Optional[float] = Query(None, ge=0, le=10, description="Рейтинг критиков до"),
+    boxoffice_from: Optional[int] = Query(None, ge=0, le=2923710000, description="Сборы от"),
+    boxoffice_to: Optional[int] = Query(None, ge=0, le=2923710000, description="Сборы до"),
+    budget_from: Optional[int] = Query(None, ge=0, le=400000000, description="Бюджет от"),
+    budget_to: Optional[int] = Query(None, ge=0, le=400000000, description="Бюджет до"),
+    duration_from: Optional[int] = Query(None, ge=0, le=600, description="Длительность от"),
+    duration_to: Optional[int] = Query(None, ge=0, le=600, description="Длительность до"),
+    age_from: Optional[int] = Query(None, ge=0, le=18, description="Возрастное ограничение от"),
+    age_to: Optional[int] = Query(None, ge=0, le=18, description="Возрастное ограничение до"),
+    sort_by: Optional[str] = Query("popularity", description="Сортировка по: popularity, rating_all или year_prem")
+):
+    filters = ["m_or_ser = 'cartoon'"]  # Только фильмы
+    params = []
+
+    # Исключение короткометражек по умолчанию
+    if not genres or "Короткометражка" not in genres:
+        filters.append("films.id NOT IN (SELECT id_film FROM films_genre_link WHERE id_genre IN (SELECT id FROM films_genre WHERE genre = 'Короткометражка'))")
+
+    # Установка фильтров по диапазонам
+    def add_filter(field, from_value, to_value):
+        if from_value is not None:
+            filters.append(f"{field} >= %s")
+            params.append(from_value)
+        if to_value is not None:
+            filters.append(f"{field} <= %s")
+            params.append(to_value)
+
+    # Добавление фильтров
+    add_filter("year_prem", year_from, year_to)
+    add_filter("rating_kp", kp_from, kp_to)
+    add_filter("rating_imdb", imdb_from, imdb_to)
+    add_filter("rating_critics", critics_from, critics_to)
+    add_filter("boxoffice_dollar", boxoffice_from, boxoffice_to)
+    add_filter("budget_dollar", budget_from, budget_to)
+    add_filter("timing_m", duration_from, duration_to)
+    add_filter("age", age_from, age_to)
+
+    # Фильтрация по жанрам
+    if genres:
+        genre_list = genres.split(",")
+        genre_placeholders = ", ".join(["%s"] * len(genre_list))
+        filters.append(f"films.id IN (SELECT DISTINCT id_film FROM films_genre_link WHERE id_genre IN (SELECT id FROM films_genre WHERE genre IN ({genre_placeholders})))")
+        params.extend(genre_list)
+
+    # Фильтрация по странам
+    if countries:
+        country_list = countries.split(",")
+        country_placeholders = ", ".join(["%s"] * len(country_list))
+        filters.append(f"films.id IN (SELECT DISTINCT id_film FROM films_country_link WHERE id_country IN (SELECT id FROM films_country WHERE country IN ({country_placeholders})))")
+        params.extend(country_list)
+
+    # Проверка сортировки
+    valid_sort_columns = ["popularity", "rating_all", "year_prem"]
+    if sort_by not in valid_sort_columns:
+        raise HTTPException(status_code=400, detail="Некорректное значение sort_by")
+
+    # Финальный SQL-запрос
+    query = f"""
+        SELECT DISTINCT films.*
+        FROM films
+        WHERE {" AND ".join(filters)}
+        ORDER BY {sort_by} DESC
+        LIMIT 100
+    """
+
+    # Выполнение запроса
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        return rows
+    finally:
+        cursor.close()
+        conn.close()
 #----------------------------------------Анимационные Сериалы---------------------------------
 # Эндпоинт для получения 20 случайных фильмов из топ-200 по популярности
 @app.get("/serials_animated/random_top200/")
