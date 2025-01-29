@@ -957,6 +957,64 @@ def advanced_filter(
     finally:
         cursor.close()
         conn.close()
+
+# Новый эндпоинт для получения фильмов по жанру
+@app.get("/cartoon/by_genre/")
+def get_films_by_genre(
+    genre: str,
+    offset: int = 0,
+    limit: int = 20,
+    sort_by: str = "popularity"
+):
+    """
+    Возвращает фильмы по выбранному жанру с возможностью пагинации и сортировки.
+    Исключает фильмы жанра 'Короткометражка', если они не выбраны явно.
+    """
+    # Проверка на допустимые значения sort_by
+    valid_sort_columns = ["popularity", "rating_all", "year_prem"]
+    if sort_by not in valid_sort_columns:
+        raise HTTPException(status_code=400, detail=f"Некорректное значение sort_by. Возможные значения: {valid_sort_columns}")
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Определяем фильтр для жанра
+        query = f"""
+            SELECT DISTINCT f.id, f.name, f.poster_cloud, f.popularity, f.rating_kp, f.rating_imdb, 
+                            f.rating_critics, f.genre, f.country, f.year_prem, f.rating_all,f.m_or_ser
+            FROM films f
+            JOIN films_genre_link fgl ON f.id = fgl.id_film
+            JOIN films_genre fg ON fgl.id_genre = fg.id
+            WHERE fg.genre = %s
+            AND f.m_or_ser = 'cartoon' AND year_prem < 2025
+        """
+
+        # Исключение короткометражек, если жанр не "Короткометражка"
+        if genre.lower() != "короткометражка":
+            query += """
+                AND f.id NOT IN (
+                    SELECT id_film
+                    FROM films_genre_link
+                    WHERE id_genre = (SELECT id FROM films_genre WHERE genre = 'Короткометражка')
+                )
+            """
+
+        # Добавляем сортировку, лимит и офсет
+        query += f" ORDER BY f.{sort_by} DESC LIMIT %s OFFSET %s"
+
+        # Выполняем запрос
+        cursor.execute(query, (genre, limit, offset))
+        rows = cursor.fetchall()
+
+        if not rows:
+            raise HTTPException(status_code=404, detail="Фильмы не найдены для указанного жанра")
+
+        return rows
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
 #----------------------------------------Анимационные Сериалы---------------------------------
 # Эндпоинт для получения 20 случайных фильмов из топ-200 по популярности
 @app.get("/serials_animated/random_top200/")
