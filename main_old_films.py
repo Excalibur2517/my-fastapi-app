@@ -524,7 +524,7 @@ def get_random_top_200_films():
         cursor.execute("""
             SELECT id, name, poster_cloud
             FROM games
-            AND CHAR_LENGTH(name) <= 25
+            WHERE CHAR_LENGTH(name) <= 25
             ORDER BY popularity DESC
             LIMIT 300
         """)
