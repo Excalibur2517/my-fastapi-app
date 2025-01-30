@@ -508,3 +508,39 @@ def get_books_by_category(
     finally:
         cursor.close()
         conn.close()
+
+#----------------------------ИГРЫ----------------------
+@app.get("/game/random_top200/")
+def get_random_top_200_films():
+    """
+    Возвращает 20 случайных фильмов из топ-200 по популярности.
+    Поля: id, name, poster_cloud.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # Выбираем топ-200 фильмов по популярности
+        cursor.execute("""
+            SELECT id, name, poster_cloud
+            FROM games
+            AND CHAR_LENGTH(name) <= 25
+            ORDER BY popularity DESC
+            LIMIT 300
+        """)
+        films = cursor.fetchall()
+
+        if not films:
+            raise HTTPException(status_code=404, detail="Фильмы не найдены")
+
+        # Берем 20 случайных фильмов из списка топ-200
+        random_films = random.sample(films, 20)
+
+        return random_films
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=f"Ошибка выполнения SQL-запроса: {err}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Неизвестная ошибка: {e}")
+    finally:
+        cursor.close()
+        conn.close()
