@@ -879,6 +879,88 @@ def get_games_by_collection(collection_id: int):
     finally:
         cursor.close()
         conn.close()
+
+
+@app.get("/game/collections_info_PS/{collection_id}", response_model=List[dict])
+def get_games_by_collection(collection_id: int):
+    """
+    Возвращает всю информацию об играх, которые относятся к указанной подборке.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # SQL-запрос для получения игр по ID подборки
+        cursor.execute("""
+            SELECT 
+                g.id,
+                g.name,
+                g.genre,
+                g.platforms,
+                g.rating,
+                g.rating_all,
+                g.metacritic,
+                g.popularity,
+                g.percent_recommended,
+                g.poster_cloud,
+                g.released,
+                g.playtime
+            FROM games g
+            JOIN PS_collections_link pcl ON g.id = pcl.game_id
+            WHERE pcl.collection_id = %s
+        """, (collection_id,))
+        
+        games = cursor.fetchall()
+
+        if not games:
+            raise HTTPException(status_code=404, detail="Игры не найдены для данной подборки")
+        
+        return games
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.get("/game/collections_info_XBOX/{collection_id}", response_model=List[dict])
+def get_games_by_collection(collection_id: int):
+    """
+    Возвращает всю информацию об играх, которые относятся к указанной подборке.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # SQL-запрос для получения игр по ID подборки
+        cursor.execute("""
+            SELECT 
+                g.id,
+                g.name,
+                g.genre,
+                g.platforms,
+                g.rating,
+                g.rating_all,
+                g.metacritic,
+                g.popularity,
+                g.percent_recommended,
+                g.poster_cloud,
+                g.released,
+                g.playtime
+            FROM games g
+            JOIN XBOX_collections_link pcl ON g.id = pcl.game_id
+            WHERE pcl.collection_id = %s
+        """, (collection_id,))
+        
+        games = cursor.fetchall()
+
+        if not games:
+            raise HTTPException(status_code=404, detail="Игры не найдены для данной подборки")
+        
+        return games
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
 #----------------------------ИГРЫ IOS ANDROID-----------------------------------------------------------------
 @app.get("/gameios/random_top200/")
 def get_random_top_200_films():
