@@ -574,10 +574,9 @@ def get_game_by_id(game_id: int):
             poster_cloud,
             popularity,
             rating_count,
-            recommended,
-            exceptional,
-            meh,
-            skip
+            percent_recommended,
+            popularity,
+            tags
         FROM games
         WHERE id = %s
         """
