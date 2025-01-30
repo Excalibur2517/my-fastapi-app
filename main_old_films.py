@@ -522,11 +522,17 @@ def get_random_top_200_films():
     try:
         # Выбираем топ-200 фильмов по популярности
         cursor.execute("""
-            SELECT id, name, poster_cloud
-            FROM games
-            WHERE CHAR_LENGTH(name) <= 25
-            ORDER BY popularity DESC
-            LIMIT 300
+            SELECT g.id, g.name, g.poster_cloud, g.popularity
+FROM games g
+JOIN games_platforms_link gpl ON g.id = gpl.id_game
+JOIN games_platforms gp ON gpl.id_platform = gp.id
+WHERE CHAR_LENGTH(g.name) <= 25
+AND (gp.platform LIKE '%PC%' OR gp.platform LIKE '%PlayStation 5%' OR gp.platform LIKE '%PlayStation 4%' OR gp.platform LIKE '%Xbox One%' OR gp.platform LIKE '%Xbox Series S/X%' )
+AND g.poster_cloud IS NOT NULL
+AND g.poster_cloud <> ''
+GROUP BY g.id, g.name, g.poster_cloud, g.popularity
+ORDER BY g.popularity DESC
+LIMIT 300;
         """)
         films = cursor.fetchall()
 
