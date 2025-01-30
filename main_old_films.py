@@ -678,6 +678,78 @@ def get_shortest_names():
     finally:
         cursor.close()
         conn.close()
+
+# Новый эндпоинт для получения всех блоков подборок
+@app.get("/game/blocks_of_collection_PC/", response_model=List[dict])
+def get_films_collections():
+    """
+    Возвращает все строки из таблицы films_collection_blocks с полями name и poster.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # SQL-запрос для получения данных из таблицы
+        cursor.execute("SELECT id,name, poster FROM PC_collection_blocks")
+        rows = cursor.fetchall()
+        
+        # Проверка на пустой результат
+        if not rows:
+            raise HTTPException(status_code=404, detail="No collection blocks found")
+        
+        return rows
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+# Новый эндпоинт для получения всех блоков подборок
+@app.get("/game/blocks_of_collection_PS/", response_model=List[dict])
+def get_films_collections():
+    """
+    Возвращает все строки из таблицы films_collection_blocks с полями name и poster.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # SQL-запрос для получения данных из таблицы
+        cursor.execute("SELECT id,name, poster FROM PS_collection_blocks")
+        rows = cursor.fetchall()
+        
+        # Проверка на пустой результат
+        if not rows:
+            raise HTTPException(status_code=404, detail="No collection blocks found")
+        
+        return rows
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+# Новый эндпоинт для получения всех блоков подборок
+@app.get("/game/blocks_of_collection_XBOX/", response_model=List[dict])
+def get_films_collections():
+    """
+    Возвращает все строки из таблицы films_collection_blocks с полями name и poster.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # SQL-запрос для получения данных из таблицы
+        cursor.execute("SELECT id,name, poster FROM XBOX_collection_blocks")
+        rows = cursor.fetchall()
+        
+        # Проверка на пустой результат
+        if not rows:
+            raise HTTPException(status_code=404, detail="No collection blocks found")
+        
+        return rows
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
 #----------------------------ИГРЫ IOS ANDROID-----------------------------------------------------------------
 @app.get("/gameios/random_top200/")
 def get_random_top_200_films():
