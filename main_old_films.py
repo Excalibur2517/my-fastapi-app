@@ -551,6 +551,44 @@ LIMIT 300;
         cursor.close()
         conn.close()
 
+@app.get("/games/search_game_by_id/{game_id}")
+def get_game_by_id(game_id: int):
+    """
+    Возвращает всю информацию об игре (id, metacritic, rating, name, genre, platforms, description, released, playtime, poster_cloud, popularity)
+    по указанному game_id.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        sql = """
+        SELECT 
+            id, 
+            metacritic,
+            rating,
+            name,
+            genre, 
+            platforms, 
+            description,
+            released,
+            playtime,
+            poster_cloud,
+            popularity,
+            rating_count,
+            recommended,
+            exceptional,
+            meh,
+            skip
+        FROM games
+        WHERE id = %s
+        """
+        cursor.execute(sql, (game_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Game not found")
+        return row
+    finally:
+        cursor.close()
+        conn.close()
 #----------------------------ИГРЫ IOS ANDROID-----------------------------------------------------------------
 @app.get("/gameios/random_top200/")
 def get_random_top_200_films():
@@ -592,3 +630,4 @@ LIMIT 300;
     finally:
         cursor.close()
         conn.close()
+
