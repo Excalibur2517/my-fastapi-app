@@ -509,7 +509,7 @@ def get_books_by_category(
         cursor.close()
         conn.close()
 
-#----------------------------ИГРЫ----------------------
+#----------------------------ИГРЫ-----------------------------------------------------------------
 @app.get("/game/random_top200/")
 def get_random_top_200_films():
     """
@@ -528,6 +528,48 @@ JOIN games_platforms_link gpl ON g.id = gpl.id_game
 JOIN games_platforms gp ON gpl.id_platform = gp.id
 WHERE CHAR_LENGTH(g.name) <= 25
 AND (gp.platform LIKE '%PC%' OR gp.platform LIKE '%PlayStation 5%' OR gp.platform LIKE '%PlayStation 4%' OR gp.platform LIKE '%Xbox One%' OR gp.platform LIKE '%Xbox Series S/X%' )
+AND g.poster_cloud IS NOT NULL
+AND g.poster_cloud <> ''
+GROUP BY g.id, g.name, g.poster_cloud, g.popularity
+ORDER BY g.popularity DESC
+LIMIT 300;
+        """)
+        films = cursor.fetchall()
+
+        if not films:
+            raise HTTPException(status_code=404, detail="Фильмы не найдены")
+
+        # Берем 20 случайных фильмов из списка топ-200
+        random_films = random.sample(films, 20)
+
+        return random_films
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=f"Ошибка выполнения SQL-запроса: {err}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Неизвестная ошибка: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+
+#----------------------------ИГРЫ IOS ANDROID-----------------------------------------------------------------
+@app.get("/gameios/random_top200/")
+def get_random_top_200_films():
+    """
+    Возвращает 20 случайных фильмов из топ-200 по популярности.
+    Поля: id, name, poster_cloud.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # Выбираем топ-200 фильмов по популярности
+        cursor.execute("""
+            SELECT g.id, g.name, g.poster_cloud, g.popularity
+FROM games g
+JOIN games_platforms_link gpl ON g.id = gpl.id_game
+JOIN games_platforms gp ON gpl.id_platform = gp.id
+WHERE CHAR_LENGTH(g.name) <= 25
+AND (gp.platform LIKE '%iOS%' OR gp.platform LIKE '%Android 5%' )
 AND g.poster_cloud IS NOT NULL
 AND g.poster_cloud <> ''
 GROUP BY g.id, g.name, g.poster_cloud, g.popularity
