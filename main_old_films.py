@@ -1181,9 +1181,7 @@ def advanced_filter_games(
     playtime_to: Optional[float] = Query(None, ge=0, le=2630, description="Игровое время до"),
     percent_recommended_from: Optional[float] = Query(None, ge=0, le=100, description="Процент рекомендаций от"),
     percent_recommended_to: Optional[float] = Query(None, ge=0, le=100, description="Процент рекомендаций до"),
-    sort_by: Optional[str] = Query("popularity", description="Сортировка по: popularity, rating_all, released"),
-    offset: int = Query(0, ge=0, description="Отступ для пагинации"),
-    limit: int = Query(20, ge=1, le=100, description="Количество результатов на странице")
+    sort_by: Optional[str] = Query("popularity", description="Сортировка по: popularity, rating_all, released")
 ):
     filters = []
     params = []
@@ -1223,9 +1221,8 @@ def advanced_filter_games(
         FROM games
         WHERE {" AND ".join(filters)}
         ORDER BY {sort_by} DESC
-        LIMIT %s OFFSET %s
+        LIMIT 100
     """
-    params.extend([limit, offset])
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
