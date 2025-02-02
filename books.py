@@ -1358,7 +1358,7 @@ def get_games_by_tag(
         query = f"""
             SELECT DISTINCT g.id, g.name, g.poster_cloud, g.popularity, g.rating, g.rating_all,g.metacritic, g.released,  g.genre , g.percent_recommended
             FROM games g
-            JOIN games_tag gt ON g.id = gt.id
+            JOIN games_tag gt ON g.id_rawg = gt.id
             WHERE gt.tag = %s
             ORDER BY g.{sort_by} DESC
             LIMIT %s OFFSET %s
