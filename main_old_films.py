@@ -511,7 +511,7 @@ def get_books_by_category(
 
 #----------------------------ИГРЫ-----------------------------------------------------------------
 
-@app.get("/game/search_film_by_name/{search_text}", response_model=List[dict])
+@app.get("/game/search_game_by_name/{search_text}", response_model=List[dict])
 def search_film_by_name(search_text: str):
     """
     Ищет фильмы по названию и возвращает 20 первых результатов,
