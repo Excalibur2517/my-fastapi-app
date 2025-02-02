@@ -1254,7 +1254,7 @@ def get_games_by_genre(
     
     try:
         query = f"""
-            SELECT DISTINCT g.id, g.name, g.poster_cloud, g.popularity, g.rating, g.metacritic, g.released,g.genre , g.percent_recomended
+            SELECT DISTINCT g.id, g.name, g.poster_cloud, g.popularity, g.rating, g.metacritic, g.released,g.genre , g.percent_recommended
             FROM games g
             JOIN games_genres_link ggl ON g.id = ggl.id_game
             JOIN games_genres gg ON ggl.id_genre = gg.id
@@ -1295,7 +1295,7 @@ def get_games_by_platform(
     cursor = conn.cursor(dictionary=True)
     try:
         query = f"""
-            SELECT DISTINCT g.id, g.name, g.poster_cloud, g.popularity, g.rating, g.metacritic, g.released, g.genre , g.percent_recomended
+            SELECT DISTINCT g.id, g.name, g.poster_cloud, g.popularity, g.rating, g.metacritic, g.released, g.genre , g.percent_recommended
             FROM games g
             JOIN games_platforms_link gpl ON g.id = gpl.id_game
             JOIN games_platforms gp ON gpl.id_platform = gp.id
