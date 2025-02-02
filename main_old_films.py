@@ -1166,3 +1166,70 @@ def get_games_by_collection(collection_id: int):
     finally:
         cursor.close()
         conn.close()
+
+@app.get("/games/advanced-filter/", response_model=List[dict])
+def advanced_filter_games(
+    genres: Optional[str] = Query(None, description="Жанры игры (через запятую)"),
+    platforms: Optional[str] = Query(None, description="Платформы игры (через запятую)"),
+    release_from: Optional[int] = Query(None, ge=1954, le=2024, description="Год выпуска от"),
+    release_to: Optional[int] = Query(None, ge=1954, le=2024, description="Год выпуска до"),
+    metacritic_from: Optional[float] = Query(None, ge=0, le=100, description="Metacritic от"),
+    metacritic_to: Optional[float] = Query(None, ge=0, le=100, description="Metacritic до"),
+    rating_from: Optional[float] = Query(None, ge=0, le=5, description="RAWG рейтинг от"),
+    rating_to: Optional[float] = Query(None, ge=0, le=5, description="RAWG рейтинг до"),
+    playtime_from: Optional[float] = Query(None, ge=0, le=2630, description="Игровое время от"),
+    playtime_to: Optional[float] = Query(None, ge=0, le=2630, description="Игровое время до"),
+    percent_recommended_from: Optional[float] = Query(None, ge=0, le=100, description="Процент рекомендаций от"),
+    percent_recommended_to: Optional[float] = Query(None, ge=0, le=100, description="Процент рекомендаций до"),
+    sort_by: Optional[str] = Query("popularity", description="Сортировка по: popularity, rating_all, released")
+):
+    filters = []
+    params = []
+
+    def add_filter(field, from_value, to_value):
+        if from_value is not None:
+            filters.append(f"{field} >= %s")
+            params.append(from_value)
+        if to_value is not None:
+            filters.append(f"{field} <= %s")
+            params.append(to_value)
+
+    add_filter("released", release_from, release_to)
+    add_filter("metacritic", metacritic_from, metacritic_to)
+    add_filter("rating", rating_from, rating_to)
+    add_filter("playtime", playtime_from, playtime_to)
+    add_filter("percent_recommended", percent_recommended_from, percent_recommended_to)
+
+    if genres:
+        genre_list = genres.split(",")
+        genre_placeholders = ", ".join(["%s"] * len(genre_list))
+        filters.append(f"games.id IN (SELECT DISTINCT id_game FROM games_genres_link WHERE id_genre IN (SELECT id FROM games_genres WHERE genre IN ({genre_placeholders})))")
+        params.extend(genre_list)
+
+    if platforms:
+        platform_list = platforms.split(",")
+        platform_placeholders = ", ".join(["%s"] * len(platform_list))
+        filters.append(f"games.id IN (SELECT DISTINCT id_game FROM games_platforms_link WHERE id_platform IN (SELECT id FROM games_platforms WHERE platform IN ({platform_placeholders})))")
+        params.extend(platform_list)
+
+    valid_sort_columns = ["popularity", "rating_all", "released"]
+    if sort_by not in valid_sort_columns:
+        raise HTTPException(status_code=400, detail="Некорректное значение sort_by")
+
+    query = f"""
+        SELECT DISTINCT games.*
+        FROM games
+        WHERE {" AND ".join(filters)}
+        ORDER BY {sort_by} DESC
+        LIMIT 100
+    """
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        return rows
+    finally:
+        cursor.close()
+        conn.close()
