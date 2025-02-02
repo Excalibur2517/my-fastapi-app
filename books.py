@@ -13,7 +13,7 @@ db_config = {
     'database': 'MySQL-2575'
 }
 
-app = FastAPI(title="Films API")
+app = FastAPI(title="Books API")
 
 # Функция для получения нового соединения с БД
 def get_db_connection():
