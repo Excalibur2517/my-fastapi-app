@@ -510,6 +510,47 @@ def get_books_by_category(
         conn.close()
 
 #----------------------------ИГРЫ-----------------------------------------------------------------
+
+@app.get("/game/search_film_by_name/{search_text}", response_model=List[dict])
+def search_film_by_name(search_text: str):
+    """
+    Ищет фильмы по названию и возвращает 20 первых результатов,
+    отсортированных по началу совпадения, затем по популярности.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # SQL-запрос для поиска фильмов по названию
+        query = """
+            SELECT id, name, poster_cloud
+            FROM games
+            WHERE  name LIKE %s
+            ORDER BY 
+                CASE 
+                    WHEN name LIKE %s THEN 1
+                    ELSE 2
+                END,
+                popularity DESC
+            LIMIT 20
+        """
+        # Значения для совпадения
+        start_match = f"{search_text}%"  # Совпадение в начале текста
+        partial_match = f"%{search_text}%"  # Частичное совпадение
+
+        cursor.execute(query, (partial_match, start_match))
+        films = cursor.fetchall()
+
+        if not films:
+            raise HTTPException(status_code=404, detail="Фильмы не найдены")
+        
+        return films
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+
 @app.get("/game/random_top200/")
 def get_random_top_200_films():
     """
