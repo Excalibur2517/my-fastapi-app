@@ -1238,12 +1238,13 @@ def advanced_filter_games(
 @app.get("/games/by_genre/")
 def get_games_by_genre(
     genre: str,
+    platforms: Optional[str] = None,  # Список платформ в виде строки, разделенной запятыми
     offset: int = 0,
     limit: int = 20,
     sort_by: str = "popularity"
 ):
     """
-    Возвращает список игр по жанру с пагинацией и сортировкой.
+    Возвращает список игр по жанру и платформам с пагинацией и сортировкой.
     """
     valid_sort_columns = ["popularity", "rating_all", "released"]
     if sort_by not in valid_sort_columns:
@@ -1253,22 +1254,42 @@ def get_games_by_genre(
     cursor = conn.cursor(dictionary=True)
     
     try:
+        # Базовый SQL-запрос (фильтр только по жанру)
         query = f"""
-            SELECT DISTINCT g.id, g.name, g.poster_cloud, g.popularity, g.rating,g.rating_all, g.metacritic, g.released,g.genre , g.percent_recommended
+            SELECT DISTINCT g.id, g.name, g.poster_cloud, g.popularity, g.rating, g.rating_all, 
+                            g.metacritic, g.released, g.genre, g.percent_recommended, g.platforms
             FROM games g
             JOIN games_genres_link ggl ON g.id = ggl.id_game
             JOIN games_genres gg ON ggl.id_genre = gg.id
-            WHERE gg.genre = %s
-            ORDER BY g.{sort_by} DESC
-            LIMIT %s OFFSET %s
         """
-        
-        cursor.execute(query, (genre, limit, offset))
+
+        params = [genre]
+
+        # Если переданы платформы, добавляем фильтр
+        if platforms:
+            platform_list = platforms.split(",")  # Преобразуем в список строк
+            placeholders = ', '.join(['%s'] * len(platform_list))  # Создаем плейсхолдеры для SQL
+            query += f"""
+                JOIN games_platforms_link gpl ON g.id = gpl.id_game
+                JOIN games_platforms gp ON gpl.id_platform = gp.id
+                WHERE gg.genre = %s
+                AND gp.platform IN ({placeholders})
+            """
+            params.extend(platform_list)
+        else:
+            query += " WHERE gg.genre = %s"
+
+        # Добавляем сортировку, лимит и оффсет
+        query += f" ORDER BY g.{sort_by} DESC LIMIT %s OFFSET %s"
+        params.extend([limit, offset])
+
+        # Выполняем запрос
+        cursor.execute(query, params)
         rows = cursor.fetchall()
         
         if not rows:
-            raise HTTPException(status_code=404, detail="Игры не найдены для указанного жанра")
-        
+            raise HTTPException(status_code=404, detail="Игры не найдены для указанного жанра и платформ")
+
         return rows
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
