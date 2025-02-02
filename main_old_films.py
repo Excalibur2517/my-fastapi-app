@@ -1315,3 +1315,42 @@ def get_games_by_platform(
     finally:
         cursor.close()
         conn.close()
+
+
+@app.get("/games/by_tag/", response_model=List[dict])
+def get_games_by_tag(
+    tag: str = Query(..., description="Название тега"),
+    offset: int = Query(0, ge=0, description="Смещение (пагинация)"),
+    limit: int = Query(20, ge=1, le=100, description="Количество записей на странице"),
+    sort_by: str = Query("popularity", description="Сортировка по: popularity, rating_all, released")
+):
+    """
+    Возвращает список игр для указанного тега с поддержкой пагинации и сортировки.
+    """
+    valid_sort_columns = ["popularity", "rating_all", "released"]
+    if sort_by not in valid_sort_columns:
+        raise HTTPException(status_code=400, detail=f"Некорректное значение sort_by. Доступные значения: {valid_sort_columns}")
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        query = f"""
+            SELECT DISTINCT g.id, g.name, g.poster_cloud, g.popularity, g.rating, g.metacritic, g.released,  g.genre , g.percent_recommended
+            FROM games g
+            JOIN games_tag gt ON g.id = gt.id
+            WHERE gt.tag = %s
+            ORDER BY g.{sort_by} DESC
+            LIMIT %s OFFSET %s
+        """
+        cursor.execute(query, (tag, limit, offset))
+        rows = cursor.fetchall()
+
+        if not rows:
+            raise HTTPException(status_code=404, detail="Игры не найдены для указанного тега")
+
+        return rows
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
