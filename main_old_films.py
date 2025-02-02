@@ -1233,3 +1233,45 @@ def advanced_filter_games(
     finally:
         cursor.close()
         conn.close()
+
+
+@app.get("/games/by_genre/")
+def get_games_by_genre(
+    genre: str,
+    offset: int = 0,
+    limit: int = 20,
+    sort_by: str = "popularity"
+):
+    """
+    Возвращает список игр по жанру с пагинацией и сортировкой.
+    """
+    valid_sort_columns = ["popularity", "rating_all", "released"]
+    if sort_by not in valid_sort_columns:
+        raise HTTPException(status_code=400, detail=f"Некорректное значение sort_by. Возможные значения: {valid_sort_columns}")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        query = f"""
+            SELECT DISTINCT g.id, g.name, g.poster_cloud, g.popularity, g.rating, g.metacritic, g.released
+            FROM games g
+            JOIN games_genres_link ggl ON g.id = ggl.id_game
+            JOIN games_genres gg ON ggl.id_genre = gg.id
+            WHERE gg.genre = %s
+            ORDER BY g.{sort_by} DESC
+            LIMIT %s OFFSET %s
+        """
+        
+        cursor.execute(query, (genre, limit, offset))
+        rows = cursor.fetchall()
+        
+        if not rows:
+            raise HTTPException(status_code=404, detail="Игры не найдены для указанного жанра")
+        
+        return rows
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
