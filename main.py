@@ -1137,7 +1137,7 @@ def get_random_top_200_serials_animated():
         conn.close()
 
 # Новый эндпоинт для получения 10 фильмов с наименьшим количеством символов в name
-@app.get("/serials_animated/10_shortest_collections_list/", response_model=List[dict])
+@app.get("/series/10_shortest_collections_list/", response_model=List[dict])
 def get_shortest_names():
     """
     Возвращает 10 фильмов с наименьшим количеством символов в поле name.
