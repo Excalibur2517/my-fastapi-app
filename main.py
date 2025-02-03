@@ -1365,6 +1365,35 @@ def get_films_collections():
     finally:
         cursor.close()
         conn.close()
+
+# Новый эндпоинт для получения фильмов по ID блока
+@app.get("/serials_animated/single_block_by_id/{block_id}", response_model=List[dict])
+def get_films_by_block_id(block_id: int):
+    """
+    Возвращает все данные из таблицы films_collections, соответствующие переданному block_id.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # SQL-запрос для получения данных по block_id
+        cursor.execute("""
+            SELECT id, block_id, name, poster 
+            FROM animated_series_collections 
+            WHERE block_id = %s
+        """, (block_id,))
+        
+        rows = cursor.fetchall()
+        
+        # Проверка на пустой результат
+        if not rows:
+            raise HTTPException(status_code=404, detail=f"No films found for block_id {block_id}")
+        
+        return rows
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
 #----------------------------------------Анимэ---------------------------------
 # Эндпоинт для получения 20 случайных фильмов из топ-200 по популярности
 @app.get("/anime/random_top200/")
@@ -1596,6 +1625,35 @@ def get_films_collections():
         # Проверка на пустой результат
         if not rows:
             raise HTTPException(status_code=404, detail="No collection blocks found")
+        
+        return rows
+    except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+# Новый эндпоинт для получения фильмов по ID блока
+@app.get("/anime/single_block_by_id/{block_id}", response_model=List[dict])
+def get_films_by_block_id(block_id: int):
+    """
+    Возвращает все данные из таблицы films_collections, соответствующие переданному block_id.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # SQL-запрос для получения данных по block_id
+        cursor.execute("""
+            SELECT id, block_id, name, poster 
+            FROM anime_collections 
+            WHERE block_id = %s
+        """, (block_id,))
+        
+        rows = cursor.fetchall()
+        
+        # Проверка на пустой результат
+        if not rows:
+            raise HTTPException(status_code=404, detail=f"No films found for block_id {block_id}")
         
         return rows
     except Error as e:
