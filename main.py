@@ -1379,7 +1379,7 @@ def get_films_by_block_id(block_id: int):
         cursor.execute("""
             SELECT id, blocks_id, name, poster 
             FROM animated_series_collections 
-            WHERE block_id = %s
+            WHERE blocks_id = %s
         """, (block_id,))
         
         rows = cursor.fetchall()
@@ -1646,7 +1646,7 @@ def get_films_by_block_id(block_id: int):
         cursor.execute("""
             SELECT id, blocks_id, name, poster 
             FROM anime_collections 
-            WHERE block_id = %s
+            WHERE blocks_id = %s
         """, (block_id,))
         
         rows = cursor.fetchall()
