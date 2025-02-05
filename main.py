@@ -15,6 +15,14 @@ db_config = {
 
 app = FastAPI(title="Films API")
 
+TABLE_MAPPING_SINGLE_BLOCK = {
+    "Фильмы": "films_collections",
+    "Сериалы": "series_collections",
+    "Мультфильмы": "cartoons_collections",
+    "Анимационные сериалы": "animated_series_collections",
+    "Аниме": "anime_collections"
+}
+
 TABLE_MAPPING_BLOCKS_COLL = {
     "Фильмы": "films_collection_blocks",
     "Сериалы": "series_collection_blocks",
@@ -266,29 +274,6 @@ def get_film_by_id(film_id: int):
         cursor.close()
         conn.close()
 
-# Новый эндпоинт для получения всех блоков подборок
-@app.get("/films/blocks_of_collection/", response_model=List[dict])
-def get_films_collections():
-    """
-    Возвращает все строки из таблицы films_collection_blocks с полями name и poster.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения данных из таблицы
-        cursor.execute("SELECT id,name, poster FROM films_collection_blocks")
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail="No collection blocks found")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
 
 
 # Новый эндпоинт для получения фильмов по ID блока
@@ -588,29 +573,6 @@ def get_films_by_genre(
         cursor.close()
         conn.close()
 
-# Новый эндпоинт для получения всех блоков подборок
-@app.get("/series/blocks_of_collection/", response_model=List[dict])
-def get_films_collections():
-    """
-    Возвращает все строки из таблицы series_collection_blocks с полями name и poster.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения данных из таблицы
-        cursor.execute("SELECT id,name, poster FROM series_collections_blocks")
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail="No collection blocks found")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
 
 
 # Новый эндпоинт для получения фильмов по ID блока
@@ -942,30 +904,6 @@ def get_films_by_genre(
         cursor.close()
         conn.close()
 
-# Новый эндпоинт для получения всех блоков подборок
-@app.get("/cartoon/blocks_of_collection/", response_model=List[dict])
-def get_films_collections():
-    """
-    Возвращает все строки из таблицы films_collection_blocks с полями name и poster.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения данных из таблицы
-        cursor.execute("SELECT id,name, poster FROM cartoons_collections_blocks")
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail="No collection blocks found")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
-
 # Новый эндпоинт для получения фильмов по ID блока
 @app.get("/cartoon/single_block_by_id/{block_id}", response_model=List[dict])
 def get_films_by_block_id(block_id: int):
@@ -1209,29 +1147,6 @@ def advanced_filter_series(
         cursor.close()
         conn.close()
 
-# Новый эндпоинт для получения всех блоков подборок
-@app.get("/serials_animated/blocks_of_collection/", response_model=List[dict])
-def get_films_collections():
-    """
-    Возвращает все строки из таблицы series_collection_blocks с полями name и poster.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения данных из таблицы
-        cursor.execute("SELECT id,name, poster FROM animated_series_collection_blocks")
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail="No collection blocks found")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
 
 # Новый эндпоинт для получения фильмов по ID блока
 @app.get("/serials_animated/single_block_by_id/{block_id}", response_model=List[dict])
@@ -1476,29 +1391,6 @@ def advanced_filter_series(
         cursor.close()
         conn.close()
 
-# Новый эндпоинт для получения всех блоков подборок
-@app.get("/anime/blocks_of_collection/", response_model=List[dict])
-def get_films_collections():
-    """
-    Возвращает все строки из таблицы series_collection_blocks с полями name и poster.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения данных из таблицы
-        cursor.execute("SELECT id,name, poster FROM anime_collection_blocks")
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail="No collection blocks found")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
 
 # Новый эндпоинт для получения фильмов по ID блока
 @app.get("/anime/single_block_by_id/{block_id}", response_model=List[dict])
@@ -1614,6 +1506,38 @@ def get_films_collections(type: str = Query(..., title="Тип коллекци�
         
         if not rows:
             raise HTTPException(status_code=404, detail="No collection blocks found")
+        
+        return rows
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.get("/kino/single_block_by_id/{block_id}", response_model=List[dict])
+def get_films_by_block_id(block_id: int, type: str = Query(..., title="Тип коллекции")):
+    """
+    Возвращает все данные из соответствующей таблицы, соответствующие переданному block_id.
+    """
+    # Проверяем, что переданный type корректный
+    table_name = TABLE_MAPPING_SINGLE_BLOCK.get(type)
+    if not table_name:
+        raise HTTPException(status_code=400, detail="Invalid type parameter")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        query = f"""
+            SELECT id, block_id, name, poster 
+            FROM {table_name} 
+            WHERE block_id = %s
+        """
+        cursor.execute(query, (block_id,))
+        rows = cursor.fetchall()
+        
+        if not rows:
+            raise HTTPException(status_code=404, detail=f"No records found for block_id {block_id}")
         
         return rows
     except mysql.connector.Error as e:
