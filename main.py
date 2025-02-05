@@ -15,6 +15,14 @@ db_config = {
 
 app = FastAPI(title="Films API")
 
+TABLE_MAPPING = {
+    "Фильмы": "films_collections",
+    "Сериалы": "series_collections",
+    "Мультфильмы": "cartoons_collections",
+    "Анимационные сериалы": "animated_series_collections",
+    "Аниме": "anime_collections"
+}
+
 # Функция для получения нового соединения с БД
 def get_db_connection():
     conn = mysql.connector.connect(**db_config)
@@ -1716,6 +1724,40 @@ def get_films_by_collection(collection_id: int):
         
         return films
     except Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+#-------------------------------------AAAAAAAAAAAAAAAAA----ФИНАЛ---------------------------
+
+# Словарь соответствия type -> таблица
+@app.get("/kino/10_shortest_collections_list/", response_model=List[dict])
+def get_shortest_names(type: str = Query(..., title="Тип коллекции")):
+    """
+    Возвращает 10 фильмов/сериалов/аниме и т.д. с наименьшим количеством символов в поле name.
+    """
+    # Проверяем, что переданный type корректный
+    table_name = TABLE_MAPPING.get(type)
+    if not table_name:
+        raise HTTPException(status_code=400, detail="Invalid type parameter")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        query = f"""
+            SELECT id, name, poster 
+            FROM {table_name} 
+            ORDER BY LENGTH(name) ASC 
+            LIMIT 10
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        
+        if not rows:
+            raise HTTPException(status_code=404, detail="No films found")
+        
+        return rows
+    except mysql.connector.Error as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
