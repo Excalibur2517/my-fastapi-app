@@ -15,6 +15,14 @@ db_config = {
 
 app = FastAPI(title="Films API")
 
+LINK_TABLE_MAPPING = {
+    "Фильмы": "films_collection_link",
+    "Сериалы": "series_collection_link",
+    "Мультфильмы": "cartoons_collection_link",
+    "Анимационные сериалы": "animated_series_collection_link",
+    "Аниме": "anime_collection_link"
+}
+
 TABLE_MAPPING_SINGLE_BLOCK = {
     "Фильмы": "films_collections",
     "Сериалы": "series_collections",
@@ -274,36 +282,6 @@ def get_film_by_id(film_id: int):
         cursor.close()
         conn.close()
 
-
-
-# Новый эндпоинт для получения фильмов по ID блока
-@app.get("/films/single_block_by_id/{block_id}", response_model=List[dict])
-def get_films_by_block_id(block_id: int):
-    """
-    Возвращает все данные из таблицы films_collections, соответствующие переданному block_id.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения данных по block_id
-        cursor.execute("""
-            SELECT id, block_id, name, poster 
-            FROM films_collections 
-            WHERE block_id = %s
-        """, (block_id,))
-        
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail=f"No films found for block_id {block_id}")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
 
 # Эндпоинт для получения фильмов по ID подборки
 @app.get("/films/collections_info/{collection_id}", response_model=List[dict])
@@ -574,35 +552,6 @@ def get_films_by_genre(
         conn.close()
 
 
-
-# Новый эндпоинт для получения фильмов по ID блока
-@app.get("/series/single_block_by_id/{block_id}", response_model=List[dict])
-def get_films_by_block_id(block_id: int):
-    """
-    Возвращает все данные из таблицы films_collections, соответствующие переданному block_id.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения данных по block_id
-        cursor.execute("""
-            SELECT id, block_id, name, poster 
-            FROM series_collections 
-            WHERE block_id = %s
-        """, (block_id,))
-        
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail=f"No films found for block_id {block_id}")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
 
 # Эндпоинт для получения фильмов по ID подборки
 @app.get("/series/collections_info/{collection_id}", response_model=List[dict])
@@ -904,35 +853,6 @@ def get_films_by_genre(
         cursor.close()
         conn.close()
 
-# Новый эндпоинт для получения фильмов по ID блока
-@app.get("/cartoon/single_block_by_id/{block_id}", response_model=List[dict])
-def get_films_by_block_id(block_id: int):
-    """
-    Возвращает все данные из таблицы films_collections, соответствующие переданному block_id.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения данных по block_id
-        cursor.execute("""
-            SELECT id, block_id, name, poster 
-            FROM cartoons_collections 
-            WHERE block_id = %s
-        """, (block_id,))
-        
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail=f"No films found for block_id {block_id}")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
-
 # Эндпоинт для получения фильмов по ID подборки
 @app.get("/cartoon/collections_info/{collection_id}", response_model=List[dict])
 def get_films_by_collection(collection_id: int):
@@ -1143,36 +1063,6 @@ def advanced_filter_series(
         cursor.execute(query, params)
         rows = cursor.fetchall()
         return rows
-    finally:
-        cursor.close()
-        conn.close()
-
-
-# Новый эндпоинт для получения фильмов по ID блока
-@app.get("/serials_animated/single_block_by_id/{block_id}", response_model=List[dict])
-def get_films_by_block_id(block_id: int):
-    """
-    Возвращает все данные из таблицы films_collections, соответствующие переданному block_id.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения данных по block_id
-        cursor.execute("""
-            SELECT id, blocks_id, name, poster 
-            FROM animated_series_collections 
-            WHERE blocks_id = %s
-        """, (block_id,))
-        
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail=f"No films found for block_id {block_id}")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
         conn.close()
@@ -1392,35 +1282,6 @@ def advanced_filter_series(
         conn.close()
 
 
-# Новый эндпоинт для получения фильмов по ID блока
-@app.get("/anime/single_block_by_id/{block_id}", response_model=List[dict])
-def get_films_by_block_id(block_id: int):
-    """
-    Возвращает все данные из таблицы films_collections, соответствующие переданному block_id.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения данных по block_id
-        cursor.execute("""
-            SELECT id, blocks_id, name, poster 
-            FROM anime_collections 
-            WHERE blocks_id = %s
-        """, (block_id,))
-        
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail=f"No films found for block_id {block_id}")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
-
 # Эндпоинт для получения фильмов по ID подборки
 @app.get("/anime/collections_info/{collection_id}", response_model=List[dict])
 def get_films_by_collection(collection_id: int):
@@ -1540,6 +1401,38 @@ def get_films_by_block_id(block_id: int, type: str = Query(..., title="Тип к
             raise HTTPException(status_code=404, detail=f"No records found for block_id {block_id}")
         
         return rows
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.get("/kino/collections_info/{collection_id}", response_model=List[dict])
+def get_films_by_collection(collection_id: int, type: str = Query(..., title="Тип коллекции")):
+    """
+    Возвращает всю информацию о фильмах, которые относятся к указанной подборке.
+    """
+    link_table = LINK_TABLE_MAPPING.get(type)
+    if not link_table:
+        raise HTTPException(status_code=400, detail="Invalid type parameter")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        query = f"""
+            SELECT f.id, f.name, f.country, f.rating_kp, f.rating_imdb, f.rating_critics, f.genre, f.poster_cloud, f.year_prem, f.popularity, f.m_or_ser
+            FROM films f
+            JOIN {link_table} cl ON f.id = cl.films_id
+            WHERE cl.collection_id = %s
+        """
+        cursor.execute(query, (collection_id,))
+        films = cursor.fetchall()
+        
+        if not films:
+            raise HTTPException(status_code=404, detail="Фильмы не найдены для данной подборки")
+        
+        return films
     except mysql.connector.Error as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
