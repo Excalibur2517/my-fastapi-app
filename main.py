@@ -15,7 +15,15 @@ db_config = {
 
 app = FastAPI(title="Films API")
 
-TABLE_MAPPING = {
+TABLE_MAPPING_BLOCKS_COLL = {
+    "Фильмы": "films_collection_blocks",
+    "Сериалы": "series_collection_blocks",
+    "Мультфильмы": "cartoons_collection_blocks",
+    "Анимационные сериалы": "animated_series_collection_blocks",
+    "Аниме": "anime_collection_blocks"
+}
+
+TABLE_MAPPING_10_SHORT = {
     "Фильмы": "films_collections",
     "Сериалы": "series_collections",
     "Мультфильмы": "cartoons_collections",
@@ -312,37 +320,6 @@ def get_films_by_block_id(block_id: int):
         cursor.close()
         conn.close()
 
-
-# Новый эндпоинт для получения 10 фильмов с наименьшим количеством символов в name
-@app.get("/films/10_shortest_collections_list/", response_model=List[dict])
-def get_shortest_names():
-    """
-    Возвращает 10 фильмов с наименьшим количеством символов в поле name.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения 10 строк с наименьшим количеством символов в поле name
-        cursor.execute("""
-            SELECT id, name, poster 
-            FROM films_collections 
-            ORDER BY LENGTH(name) ASC
-            LIMIT 10
-        """)
-        
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail="No films found")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
-
 # Эндпоинт для получения фильмов по ID подборки
 @app.get("/films/collections_info/{collection_id}", response_model=List[dict])
 def get_films_by_collection(collection_id: int):
@@ -549,36 +526,6 @@ def get_film_by_id(serial_id: int):
         if not row:
             raise HTTPException(status_code=404, detail="Film not found")
         return row
-    finally:
-        cursor.close()
-        conn.close()
-
-# Новый эндпоинт для получения 10 фильмов с наименьшим количеством символов в name
-@app.get("/series/10_shortest_collections_list/", response_model=List[dict])
-def get_shortest_names():
-    """
-    Возвращает 10 фильмов с наименьшим количеством символов в поле name.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения 10 строк с наименьшим количеством символов в поле name
-        cursor.execute("""
-            SELECT id, name, poster 
-            FROM series_collections 
-            ORDER BY LENGTH(name) ASC
-            LIMIT 10
-        """)
-        
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail="No films found")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
         conn.close()
@@ -850,36 +797,6 @@ def get_random_top_200_cartoon():
         conn.close()
 
 
-# Новый эндпоинт для получения 10 фильмов с наименьшим количеством символов в name
-@app.get("/cartoon/10_shortest_collections_list/", response_model=List[dict])
-def get_shortest_names():
-    """
-    Возвращает 10 фильмов с наименьшим количеством символов в поле name.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения 10 строк с наименьшим количеством символов в поле name
-        cursor.execute("""
-            SELECT id, name, poster 
-            FROM cartoons_collections 
-            ORDER BY LENGTH(name) ASC
-            LIMIT 10
-        """)
-        
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail="No films found")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
-
 @app.get("/cartoon/advanced-filter/")
 def advanced_filter(
     genres: Optional[str] = Query(None, description="Жанры фильма (через запятую)"),
@@ -1145,65 +1062,6 @@ def get_random_top_200_serials_animated():
         cursor.close()
         conn.close()
 
-# Новый эндпоинт для получения 10 фильмов с наименьшим количеством символов в name
-@app.get("/series/10_shortest_collections_list/", response_model=List[dict])
-def get_shortest_names():
-    """
-    Возвращает 10 фильмов с наименьшим количеством символов в поле name.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения 10 строк с наименьшим количеством символов в поле name
-        cursor.execute("""
-            SELECT id, name, poster 
-            FROM series_collections 
-            ORDER BY LENGTH(name) ASC
-            LIMIT 10
-        """)
-        
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail="No films found")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
-
-# Новый эндпоинт для получения 10 фильмов с наименьшим количеством символов в name
-@app.get("/serials_animated/10_shortest_collections_list/", response_model=List[dict])
-def get_shortest_names():
-    """
-    Возвращает 10 фильмов с наименьшим количеством символов в поле name.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения 10 строк с наименьшим количеством символов в поле name
-        cursor.execute("""
-            SELECT id, name, poster 
-            FROM animated_series_collections 
-            ORDER BY LENGTH(name) ASC
-            LIMIT 10
-        """)
-        
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail="No films found")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
 
 # Новый эндпоинт для получения фильмов по жанру
 @app.get("/serials_animated/by_genre/")
@@ -1470,35 +1328,6 @@ def get_random_top_200_anime():
         cursor.close()
         conn.close()
 
-# Новый эндпоинт для получения 10 фильмов с наименьшим количеством символов в name
-@app.get("/anime/10_shortest_collections_list/", response_model=List[dict])
-def get_shortest_names():
-    """
-    Возвращает 10 фильмов с наименьшим количеством символов в поле name.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # SQL-запрос для получения 10 строк с наименьшим количеством символов в поле name
-        cursor.execute("""
-            SELECT id, name, poster 
-            FROM anime_collections 
-            ORDER BY LENGTH(name) ASC
-            LIMIT 10
-        """)
-        
-        rows = cursor.fetchall()
-        
-        # Проверка на пустой результат
-        if not rows:
-            raise HTTPException(status_code=404, detail="No films found")
-        
-        return rows
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
 
 # Новый эндпоинт для получения фильмов по жанру
 @app.get("/anime/by_genre/")
@@ -1737,7 +1566,7 @@ def get_shortest_names(type: str = Query(..., title="Тип коллекции")
     Возвращает 10 фильмов/сериалов/аниме и т.д. с наименьшим количеством символов в поле name.
     """
     # Проверяем, что переданный type корректный
-    table_name = TABLE_MAPPING.get(type)
+    table_name = TABLE_MAPPING_10_SHORT.get(type)
     if not table_name:
         raise HTTPException(status_code=400, detail="Invalid type parameter")
     
@@ -1755,6 +1584,36 @@ def get_shortest_names(type: str = Query(..., title="Тип коллекции")
         
         if not rows:
             raise HTTPException(status_code=404, detail="No films found")
+        
+        return rows
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.get("/kino/blocks_of_collection/", response_model=List[dict])
+def get_films_collections(type: str = Query(..., title="Тип коллекции")):
+    """
+    Возвращает все строки из соответствующей таблицы с полями name и poster.
+    """
+    # Проверяем, что переданный type корректный
+    table_name = TABLE_MAPPING_BLOCKS_COLL.get(type)
+    if not table_name:
+        raise HTTPException(status_code=400, detail="Invalid type parameter")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        query = f"""
+            SELECT id, name, poster 
+            FROM {table_name}
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        
+        if not rows:
+            raise HTTPException(status_code=404, detail="No collection blocks found")
         
         return rows
     except mysql.connector.Error as e:
