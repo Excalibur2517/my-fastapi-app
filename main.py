@@ -1423,7 +1423,7 @@ def get_films_by_collection(collection_id: int, type: str = Query(..., title="Т
         query = f"""
             SELECT f.id, f.name, f.country, f.rating_kp, f.rating_imdb, f.rating_critics, f.genre, f.poster_cloud, f.year_prem, f.popularity, f.m_or_ser
             FROM films f
-            JOIN {link_table} cl ON f.id = cl.films_id
+            JOIN {link_table} cl ON f.id = cl.film_id
             WHERE cl.collection_id = %s
         """
         cursor.execute(query, (collection_id,))
