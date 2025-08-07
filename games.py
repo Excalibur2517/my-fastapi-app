@@ -7,10 +7,10 @@ import random
 
 # Данные для подключения к БД MySQL
 db_config = {
-    'host': '212.233.95.130',
-    'user': 'user_1',
-    'password': 'Projectbd170898.!',
-    'database': 'MySQL-2575'
+    'host': '83.166.232.67',
+    'user': 'test_user',
+    'password': 'Projectbd12345.!',
+    'database': 'MySQL-6549'
 }
 
 app = FastAPI(title="Films API")
