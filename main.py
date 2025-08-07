@@ -282,36 +282,6 @@ def get_film_by_id(film_id: int):
         cursor.close()
         conn.close()
 
-
-# Эндпоинт для получения фильмов по ID подборки
-@app.get("/films/collections_info/{collection_id}", response_model=List[dict])
-def get_films_by_collection(collection_id: int):
-    """
-    Возвращает всю информацию о фильмах, которые относятся к указанной подборке.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # Исправленный SQL-запрос для получения фильмов по ID подборки
-        cursor.execute("""
-            SELECT f.id,f.name,f.country,f.rating_kp,f.rating_imdb,f.rating_critics,f.genre,f.poster_cloud,f.year_prem,f.popularity,f.m_or_ser
-            FROM films f
-            JOIN films_collection_link cl ON f.id = cl.films_id
-            WHERE cl.collection_id = %s
-        """, (collection_id,))
-        
-        films = cursor.fetchall()
-
-        if not films:
-            raise HTTPException(status_code=404, detail="Фильмы не найдены для данной подборки")
-        
-        return films
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
-
 @app.get("/films/search_film_by_name/{search_text}", response_model=List[dict])
 def search_film_by_name(search_text: str):
     """
@@ -551,36 +521,6 @@ def get_films_by_genre(
         cursor.close()
         conn.close()
 
-
-
-# Эндпоинт для получения фильмов по ID подборки
-@app.get("/series/collections_info/{collection_id}", response_model=List[dict])
-def get_films_by_collection(collection_id: int):
-    """
-    Возвращает всю информацию о фильмах, которые относятся к указанной подборке.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # Исправленный SQL-запрос для получения фильмов по ID подборки
-        cursor.execute("""
-            SELECT f.id,f.name,f.country,f.rating_kp,f.rating_imdb,f.rating_critics,f.genre,f.poster_cloud,f.year_prem,f.popularity,f.m_or_ser, f.seasons,f.seasons_ep
-            FROM films f
-            JOIN series_collections_link cl ON f.id = cl.film_id
-            WHERE cl.collection_id = %s
-        """, (collection_id,))
-        
-        films = cursor.fetchall()
-
-        if not films:
-            raise HTTPException(status_code=404, detail="Фильмы не найдены для данной подборки")
-        
-        return films
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
 
 
 @app.get("/series/advanced-filter/")
@@ -853,35 +793,6 @@ def get_films_by_genre(
         cursor.close()
         conn.close()
 
-# Эндпоинт для получения фильмов по ID подборки
-@app.get("/cartoon/collections_info/{collection_id}", response_model=List[dict])
-def get_films_by_collection(collection_id: int):
-    """
-    Возвращает всю информацию о фильмах, которые относятся к указанной подборке.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # Исправленный SQL-запрос для получения фильмов по ID подборки
-        cursor.execute("""
-            SELECT f.id,f.name,f.country,f.rating_kp,f.rating_imdb,f.rating_critics,f.genre,f.poster_cloud,f.year_prem,f.popularity,f.m_or_ser
-            FROM films f
-            JOIN cartoons_collections_link cl ON f.id = cl.film_id
-            WHERE cl.collection_id = %s
-        """, (collection_id,))
-        
-        films = cursor.fetchall()
-
-        if not films:
-            raise HTTPException(status_code=404, detail="Фильмы не найдены для данной подборки")
-        
-        return films
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
-
 #----------------------------------------Анимационные Сериалы---------------------------------
 # Эндпоинт для получения 20 случайных фильмов из топ-200 по популярности
 @app.get("/serials_animated/random_top200/")
@@ -1063,35 +974,6 @@ def advanced_filter_series(
         cursor.execute(query, params)
         rows = cursor.fetchall()
         return rows
-    finally:
-        cursor.close()
-        conn.close()
-
-# Эндпоинт для получения фильмов по ID подборки
-@app.get("/serials_animated/collections_info/{collection_id}", response_model=List[dict])
-def get_films_by_collection(collection_id: int):
-    """
-    Возвращает всю информацию о фильмах, которые относятся к указанной подборке.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # Исправленный SQL-запрос для получения фильмов по ID подборки
-        cursor.execute("""
-            SELECT f.id,f.name,f.country,f.rating_kp,f.rating_imdb,f.rating_critics,f.genre,f.poster_cloud,f.year_prem,f.popularity,f.m_or_ser, f.seasons,f.seasons_ep
-            FROM films f
-            JOIN animated_series_collections_link cl ON f.id = cl.film_id
-            WHERE cl.collection_id = %s
-        """, (collection_id,))
-        
-        films = cursor.fetchall()
-
-        if not films:
-            raise HTTPException(status_code=404, detail="Фильмы не найдены для данной подборки")
-        
-        return films
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
         conn.close()
@@ -1282,34 +1164,6 @@ def advanced_filter_series(
         conn.close()
 
 
-# Эндпоинт для получения фильмов по ID подборки
-@app.get("/anime/collections_info/{collection_id}", response_model=List[dict])
-def get_films_by_collection(collection_id: int):
-    """
-    Возвращает всю информацию о фильмах, которые относятся к указанной подборке.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # Исправленный SQL-запрос для получения фильмов по ID подборки
-        cursor.execute("""
-            SELECT f.id,f.name,f.country,f.rating_kp,f.rating_imdb,f.rating_critics,f.genre,f.poster_cloud,f.year_prem,f.popularity,f.m_or_ser, f.seasons,f.seasons_ep
-            FROM films f
-            JOIN anime_collections_link cl ON f.id = cl.film_id
-            WHERE cl.collection_id = %s
-        """, (collection_id,))
-        
-        films = cursor.fetchall()
-
-        if not films:
-            raise HTTPException(status_code=404, detail="Фильмы не найдены для данной подборки")
-        
-        return films
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
 #-------------------------------------AAAAAAAAAAAAAAAAA----ФИНАЛ---------------------------
 
 # Словарь соответствия type -> таблица
